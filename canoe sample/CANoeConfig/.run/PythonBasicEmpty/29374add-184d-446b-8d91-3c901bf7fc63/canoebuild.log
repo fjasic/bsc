@@ -1,0 +1,7 @@
+"9:52:02.821";"Starting build";"mode = make"
+"9:52:02.911";"Load test unit";""
+"9:52:02.951";"Delete build.hash";"TSO < 2.2.30"
+"9:52:02.951";"Initialization of parameter scopes";""
+"9:52:03.031";"Compilation of VTT";"C:\Users\fjasic\Desktop\diplomski git\oscilloscope-bachelor\canoe sample\CANoeConfig\.run\PythonBasicEmpty\29374add-184d-446b-8d91-3c901bf7fc63\Tests.vtt"
+"9:52:05.171";"Load VTT Tree";"C:\Users\fjasic\Desktop\diplomski git\oscilloscope-bachelor\canoe sample\CANoeConfig\.run\PythonBasicEmpty\29374add-184d-446b-8d91-3c901bf7fc63\Tests.vtt"
+"9:52:05.181";"Build finished";"result = OK"

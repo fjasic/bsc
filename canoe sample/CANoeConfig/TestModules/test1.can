@@ -1,0 +1,23 @@
+/*@!Encoding:1252*/
+testcase firstTestCase()
+{
+  char slovo;
+  slovo = keyPressed();
+  
+  if (slovo == 'e')
+  {
+   testStepPass("1.1", "Test prosao.");
+  }
+  else if (slovo == 'c')
+  {
+    testStepFail("1.1", "Test nije prosao.");  
+  }
+  
+}
+
+void MainTest()
+{
+  
+  firstTestCase();
+  
+}

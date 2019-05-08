@@ -1,0 +1,7 @@
+/*@!Encoding:1250*/
+testcase ctcLED()
+{
+  testCaseTitle("Test function","LED");
+  
+}
+

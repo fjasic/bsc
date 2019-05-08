@@ -1,0 +1,20 @@
+/*@!Encoding:1252*/
+testcase sixthTestCase()
+{
+  long dblEnteredValue;
+  
+  testWaitForValueInput("Which port is not working?", 0);
+  
+  dblEnteredValue = testGetValueInput();
+  
+  
+  testStepFail("Step x", "Port %1.f has an error", dblEnteredValue);
+  
+  
+}
+
+void MainTest()
+{
+  sixthTestCase();
+  
+}
