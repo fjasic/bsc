@@ -10,7 +10,7 @@ class Tektronix4104():
     ready = 'READY\n'
     save = 'SAVE\n'
     trigger = 'TRIG\n'
-
+    
     def __init__(self, ID):
         print "Setting up resource manager..."
         # import pdb; pdb.set_trace()
@@ -64,3 +64,4 @@ class Tektronix4104():
         self.time = np.arange(0, self.xincr*len(self.volts), self.xincr)
 
         return [self.time, self.volts]
+

@@ -1,11 +1,11 @@
 import sys
 
 
-def main():
+def checksum():
     args = sys.argv[1:]
 
     if len(args) != 3:
-        print "usage: checksum.py <string> <id> <lin_ver>"
+        print "usage: readout.py <string> <id> <lin_ver>"
         sys.exit(1)
 
     ime_string = args[0]
@@ -38,9 +38,10 @@ def main():
         p1 = 1
     else:
         p1 = 0
-
+    output = ""
     print "parity: 0b" + str(p1) + str(p0)
+    for i in data:
+        output += str(hex(i))[2:]
+        output += " "
+    return (output + str(hex(chcksum))[2:])
 
-
-if __name__ == '__main__':
-    main()
