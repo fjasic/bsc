@@ -1,10 +1,9 @@
 import time as Time
-import pylab
-import matplotlib.pyplot as plt
 import serial
 import csv
 from TektronixClasses import Tektronix4104
 from checksum import *
+import itertools
 
 
 def main():
@@ -33,7 +32,7 @@ def main():
         timeTotal = []
         voltageTotal = []
         print "start time: " + str(start)
-        while(Time.time() - start < 10):
+        while(Time.time() - start < 5):
             # while(True):
             #    if(oscope.state == oscope.trigger):
             print Time.time()
@@ -51,7 +50,11 @@ def main():
 
         state = oscope.checkTrigger()
         checkCount += 1
-        
+        csvFile = open("can-f1ca-ch2-l.csv", "w")
+        csvWriter = csv.writer(csvFile)
+        for val in itertools.izip(timeTotal, voltageTotal):
+            csvWriter.writerow(val)
+        csvFile.close()
         # pulse_width()
         # print_res()
 
@@ -66,17 +69,23 @@ def main():
 
 
 def serial_call():
-    data = checksum()
-    com3 = serial.Serial(port="COM3", baudrate=9600)
-    com4 = serial.Serial(port="COM4", baudrate=9600)
-    com3.write("LIN CLOSE\r\n")
-    com4.write("LIN CLOSE\r\n")
-    com3.write("LIN OPEN FREE 1000\r\n")
-    com4.write("LIN OPEN FREE 1000\r\n")
+    #data = checksum()
+    com3 = serial.Serial(port="COM3", baudrate=115200)
+    com4 = serial.Serial(port="COM4", baudrate=115200)
+    # com3.write("LIN CLOSE\r\n")
+    # com4.write("LIN CLOSE\r\n")
+    # com3.write("LIN OPEN FREE 1000\r\n")
+    # com4.write("LIN OPEN FREE 1000\r\n")
+    # com3.write("LIN TX %s\r\n" % (data))
+    # print "POSLAO LIN TX %s\r\n" % (data)
 
-    com3.write("LIN TX %s\r\n" % (data))
-    print "POSLAO LIN TX %s\r\n" % (data)
-    
+    com3.write("CAN USER CLOSE CH2\r\n")
+    com4.write("CAN USER CLOSE CH2\r\n")
+
+    com3.write("CAN USER OPEN CH2 100K\r\n")
+    com4.write("CAN USER OPEN CH2 100K\r\n")
+    com4.write("TX2 F1CA\r\n")
+
 
 def print_res():
     for i in range(pw_global_index, len(voltageTotal)):
