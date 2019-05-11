@@ -3,7 +3,6 @@ import sys
 
 def checksum():
     args = sys.argv[1:]
-    
     if len(args) != 3:
         print "usage: readout.py <string> <id> <lin_ver>"
         sys.exit(1)
@@ -44,4 +43,3 @@ def checksum():
         output += str(hex(i))[2:]
         output += " "
     return (output + str(hex(chcksum))[2:])
-

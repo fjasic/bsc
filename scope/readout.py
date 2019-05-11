@@ -2,7 +2,7 @@ import time as Time
 import serial
 import csv
 from TektronixClasses import Tektronix4104
-from checksum import *
+from checksum import checksum
 import itertools
 
 
@@ -25,8 +25,6 @@ def main():
         triggerCount = 0
         checkCount = 1
         start = Time.time()
-        global voltageTotal
-        global timeTotal
         pw_global_index = 0
         pw_global = 0
         timeTotal = []
@@ -50,13 +48,10 @@ def main():
 
         state = oscope.checkTrigger()
         checkCount += 1
-        csvFile = open("can-f1ca-ch2-l.csv", "w")
-        csvWriter = csv.writer(csvFile)
+        with open("can-f1ca-ch2-l.csv", "w") as csvFile:
+            csvWriter = csv.writer(csvFile)
         for val in itertools.izip(timeTotal, voltageTotal):
             csvWriter.writerow(val)
-        csvFile.close()
-        # pulse_width()
-        # print_res()
 
     except KeyboardInterrupt:
         print "Done taking data."
@@ -69,7 +64,7 @@ def main():
 
 
 def serial_call():
-    #data = checksum()
+    # data = checksum()
     com3 = serial.Serial(port="COM3", baudrate=115200)
     com4 = serial.Serial(port="COM4", baudrate=115200)
     # com3.write("LIN CLOSE\r\n")
@@ -85,25 +80,6 @@ def serial_call():
     com3.write("CAN USER OPEN CH2 100K\r\n")
     com4.write("CAN USER OPEN CH2 100K\r\n")
     com4.write("TX2 F1CA\r\n")
-
-
-def print_res():
-    for i in range(pw_global_index, len(voltageTotal)):
-        if voltageTotal[i] > 2.0:
-            t = timeTotal[i]
-            print "FREQ: " + str(1/t) + " Hz"
-            print "DUTY CYCLE: " + str((pw_global/t) * 100) + "%"
-            break
-
-
-def pulse_width():
-    for i, v in enumerate(voltageTotal):
-        if v < 0.1:
-            global pw_global_index
-            pw_global_index = i
-            global pw_global
-            pw_global = timeTotal[i] - timeTotal[0]
-            break
 
 
 if __name__ == "__main__":
