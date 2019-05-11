@@ -77,7 +77,7 @@ def serial_call():
     # com3.write("LIN OPEN FREE 1000\r\n")
     # com4.write("LIN OPEN FREE 1000\r\n")
     # com3.write("LIN TX %s\r\n" % (data))
-    # print "POSLAO LIN TX %s\r\n" % (data)
+    # print "Sent LIN TX %s\r\n" % (data)
 
     com3.write("CAN USER CLOSE CH2\r\n")
     com4.write("CAN USER CLOSE CH2\r\n")
@@ -91,7 +91,7 @@ def print_res():
     for i in range(pw_global_index, len(voltageTotal)):
         if voltageTotal[i] > 2.0:
             t = timeTotal[i]
-            print "FREKVENCIJA: " + str(1/t) + " Hz"
+            print "FREQ: " + str(1/t) + " Hz"
             print "DUTY CYCLE: " + str((pw_global/t) * 100) + "%"
             break
 
