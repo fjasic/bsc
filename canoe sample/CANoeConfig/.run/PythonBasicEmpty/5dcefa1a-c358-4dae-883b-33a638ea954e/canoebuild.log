@@ -1,7 +1,0 @@
-"11:57:28.107";"Starting build";"mode = make"
-"11:57:28.123";"Load test unit";""
-"11:57:28.173";"Delete build.hash";"TSO < 2.2.30"
-"11:57:28.183";"Initialization of parameter scopes";""
-"11:57:28.243";"Compilation of VTT";"c:\Users\Public\Documents\Vector\CANoe\10.0\CANoe Sample Configurations\Programming\Python\CANoeConfig\.run\PythonBasicEmpty\5dcefa1a-c358-4dae-883b-33a638ea954e\Tests.vtt"
-"11:57:28.931";"Load VTT Tree";"c:\Users\Public\Documents\Vector\CANoe\10.0\CANoe Sample Configurations\Programming\Python\CANoeConfig\.run\PythonBasicEmpty\5dcefa1a-c358-4dae-883b-33a638ea954e\Tests.vtt"
-"11:57:28.941";"Build finished";"result = OK"

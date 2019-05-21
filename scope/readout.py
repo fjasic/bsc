@@ -7,6 +7,11 @@ import itertools
 import serial
 import sys
 import checksum
+import ripyl
+import ripyl.protocol.spi as spi
+import ripyl.streaming as stream
+from collections import OrderedDict
+import ripyl.util.plot as rplot
 # import sshrpi
 """sve pod komentarom je za CAN"""
 
@@ -36,29 +41,30 @@ def main(channel_num):
     volts = (ADC_wave - yoff)*ymult + yzero
     global time
     time = np.arange(0, xincr*len(volts), xincr)
-    global data_volts
     data_volts = []
-    global clock_volts
     clock_volts = []
     pylab.title("SPI")
     pylab.figure(1)
     if channel_num == 1:
-        for i in range(len(volts)):
-            if volts[i] > 3.0:
-                volts[i] = 1.0
-            else:
-                volts[i] = 0.0
-        data_volts = volts
-        plot_1(time, data_volts)
+        # for i in range(len(volts)):
+        #     if volts[i] > 3.0:
+        #         volts[i] = 1.0
+        #     else:
+        #         volts[i] = 0.0
+        # data_volts = volts
+        # plot_1(time, data_volts)
+        plot_1(time, volts)
     else:
-        for i in range(len(volts)):
-            if volts[i] > 0.0:
-                volts[i] = 1.0
-            else:
-                volts[i] = 0.0
-        clock_volts = volts
-        plot_2(time, clock_volts)
+        # for i in range(len(volts)):
+        #     if volts[i] > 0.5:
+        #         volts[i] = 1.0
+        #     else:
+        #         volts[i] = 0.0
+        # clock_volts = volts
+        # plot_2(time, clock_volts)
+        plot_2(time, volts)
 
+    # RAZLIKA IZMEDJU 2 UZORKOVANJA JE 0,000004
     # for i in range(len(volts)):
     #     if volts[i] < 4.80:
     #         pw_index = i
@@ -84,19 +90,13 @@ def main(channel_num):
     # print can_final
     # print len(can_final)
     # print "id:" + str(can_final[1:12])
-    return data_volts, clock_volts
-
-
-def decode(data, clock, time):
-    print data
-    print time
-    print clock
+    return volts
 
 
 def plot_1(time, data_volts):
     pylab.subplot(2, 1, 1)
     pylab.ylabel("data")
-    # pylab.xlabel("time")
+    pylab.xlabel("time")
     pylab.plot(time, data_volts, color="r")
 
 
@@ -108,9 +108,9 @@ def plot_2(time, clock_volts):
 
 
 def plot_everything():
+    pylab.get_current_fig_manager().resize(
+        *pylab.get_current_fig_manager().window.maxsize())
     pylab.savefig("SPI_scope_output.png")
-    print "PNG output done"
-    print "Exit figure to end program..."
     pylab.show()
 
 
@@ -151,8 +151,22 @@ def set_channel(scope, channel):
 
 
 if __name__ == "__main__":
-    data_final, _ = main(1)
-    _, clock_final = main(3)
+    data_final = main(1)
+    clock_final = main(3)
     plot_everything()
-    decode(data_final, clock_final, time)
+    sample_period = 0.0000004
+    data = list(ripyl.streaming.samples_to_sample_stream(
+        data_final, sample_period))
+    clock = list(ripyl.streaming.samples_to_sample_stream(
+        clock_final, sample_period))
+    records = list(spi.spi_decode(iter(clock), iter(data), lsb_first=False))
+    channels = OrderedDict([('CLK (V)', clock), ('MOSI / MISO (V)', data)])
+    plotter = rplot.Plotter()
+    plotter.plot(channels, records)
+    pylab.get_current_fig_manager().resize(
+        *pylab.get_current_fig_manager().window.maxsize())
+    plotter.show()
+    plotter.save_plot("dekodovan-SPI-123.png")
+    print "PNG output done"
+    print "Exit figure to end program..."
     csv_everything(data_final, clock_final)
