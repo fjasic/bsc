@@ -2,25 +2,24 @@ import visa
 import numpy as np
 from struct import unpack
 import pylab
-import csv
-import itertools
-import serial
 import sys
-import checksum
 import ripyl
 import ripyl.protocol.spi as spi
+import ripyl.protocol.i2c as i2c
+import ripyl.protocol.can as can
+import ripyl.protocol.lin as lin
 import ripyl.streaming as stream
 from collections import OrderedDict
 import ripyl.util.plot as rplot
-# import sshrpi
-"""sve pod komentarom je za CAN"""
+from ssh_spi import ssh_call_spi
+from serial_can import serial_call_can
+from serial_lin import serial_call_lin
+from csv_output import *
+import warnings
 
 
-def main(channel_num):
-    # serial_call()
-    # sshrpi()
-    scope = visa.ResourceManager().open_resource(
-        'USB0::0X0699::0x0401::C021046::INSTR')
+def main(instrument_id, channel_num):
+    scope = visa.ResourceManager().open_resource(instrument_id)
     set_channel(scope, str(channel_num))
     scope.write('DATA:WIDTH 1')
     scope.write('DATA:ENC RPB')
@@ -39,134 +38,149 @@ def main(channel_num):
 
     ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
     volts = (ADC_wave - yoff)*ymult + yzero
-    global time
     time = np.arange(0, xincr*len(volts), xincr)
-    data_volts = []
-    clock_volts = []
-    pylab.title("SPI")
-    pylab.figure(1)
-    if channel_num == 1:
-        # for i in range(len(volts)):
-        #     if volts[i] > 3.0:
-        #         volts[i] = 1.0
-        #     else:
-        #         volts[i] = 0.0
-        # data_volts = volts
-        # plot_1(time, data_volts)
-        plot_1(time, volts)
-    else:
-        # for i in range(len(volts)):
-        #     if volts[i] > 0.5:
-        #         volts[i] = 1.0
-        #     else:
-        #         volts[i] = 0.0
-        # clock_volts = volts
-        # plot_2(time, clock_volts)
-        plot_2(time, volts)
-
-    # RAZLIKA IZMEDJU 2 UZORKOVANJA JE 0,000004
-    # for i in range(len(volts)):
-    #     if volts[i] < 4.80:
-    #         pw_index = i
-    #         break
-    # reverse_volts = volts[::-1]
-
-    # for i in range(len(reverse_volts)):
-    #     if reverse_volts[i] < 1.43:
-    #         pw_index_reverse = i
-    #         break
-
-    # pw_index_end = len(volts) - pw_index_reverse
-    # volts_useful = volts[pw_index:pw_index_end]
-    # time_useful = time[pw_index:pw_index_end]
-
-    # can_final = []
-
-    # for i in volts_useful[::40]:
-    #     can_final.append(int(i))
-    # print can_final
-    # for i in range(1, 12):
-    #     id_base += str(can_final[i])
-    # print can_final
-    # print len(can_final)
-    # print "id:" + str(can_final[1:12])
-    return volts
-
-
-def plot_1(time, data_volts):
-    pylab.subplot(2, 1, 1)
-    pylab.ylabel("data")
-    pylab.xlabel("time")
-    pylab.plot(time, data_volts, color="r")
-
-
-def plot_2(time, clock_volts):
-    pylab.subplot(2, 1, 2)
-    pylab.xlabel("time")
-    pylab.ylabel("clock")
-    pylab.plot(time, clock_volts)
-
-
-def plot_everything():
-    pylab.get_current_fig_manager().resize(
-        *pylab.get_current_fig_manager().window.maxsize())
-    pylab.savefig("SPI_scope_output.png")
-    pylab.show()
-
-
-def csv_everything(data_final, clock_final):
-    with open("spi-capture.csv", "w") as csvCapture:
-        csvWriter = csv.writer(csvCapture)
-        for val in itertools.izip(time, clock_final, data_final):
-            csvWriter.writerow(val)
-    print "CSV output done"
+    return volts, time
 
 
 def set_channel(scope, channel):
     scope.write('DATA:SOU CH'+str(channel))
 
-# def serial_call():
-#     # data = checksum()
-#     com3 = serial.Serial(port="COM3", baudrate=115200)
-#     com4 = serial.Serial(port="COM4", baudrate=115200)
-#     # com3.write("LIN CLOSE\r\n")
-#     # com4.write("LIN CLOSE\r\n")
-#     # com3.write("LIN OPEN FREE 1000\r\n")
-#     # com4.write("LIN OPEN FREE 1000\r\n")
-#     # com3.write("LIN TX %s\r\n" % (data))
-#     # print "Sent LIN TX %s\r\n" % (data)
-
-#     com3.write("CAN USER CLOSE CH2\r\n")
-#     com4.write("CAN USER CLOSE CH2\r\n")
-#     com3.write("CAN USER CLOSE CH1\r\n")
-#     com4.write("CAN USER CLOSE CH1\r\n")
-#     com3.write("CAN USER OPEN CH1 125K\r\n")
-#     com4.write("CAN USER OPEN CH1 125K\r\n")
-#     com3.write("CAN USER OPEN CH2 125K\r\n")
-#     com4.write("CAN USER OPEN CH2 125K\r\n")
-#     com4.write("CAN USER MASK CH2 0000\r\n")
-#     com4.write("CAN USER FILTER CH2 ")
-#     com4.write("CAN USER ALIGN RIGHT\r\n")
-#     com4.write("CAN USER TX CH2 AAAA\r\n")
-
 
 if __name__ == "__main__":
-    data_final = main(1)
-    clock_final = main(3)
-    plot_everything()
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
+        print "USAGE : readout.py --protocol[CAN,LIN,SPI,I2C] --data_channel[1,2,3,4] --clock_channel[1,2,3,4](only for SPI and I2C)"
+        sys.exit()
+    # YOU CAN SEE YOUR INSTRUMENT ID IN OpenChoiceDesktop APPLICATION
+    instrument_id = 'USB0::0X0699::0x0401::C021046::INSTR'
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    # SAMPLE PERIOD IS 0.0000004 FOR TEKTRONIX DPO4104
     sample_period = 0.0000004
-    data = list(ripyl.streaming.samples_to_sample_stream(
-        data_final, sample_period))
-    clock = list(ripyl.streaming.samples_to_sample_stream(
-        clock_final, sample_period))
-    records = list(spi.spi_decode(iter(clock), iter(data), lsb_first=False))
-    channels = OrderedDict([('CLK (V)', clock), ('MOSI / MISO (V)', data)])
-    plotter = rplot.Plotter()
-    plotter.plot(channels, records)
-    pylab.get_current_fig_manager().resize(
-        *pylab.get_current_fig_manager().window.maxsize())
-    plotter.show()
-    plotter.save_plot("dekodovan-SPI-123.png")
-    print "PNG output done"
-    print "Exit figure to end program..."
-    csv_everything(data_final, clock_final)
+    # START--------------------------------------------------
+    # serial_call_lin()
+    # serial_call_can()
+    # ssh_call_spi()
+    # ssh_call_i2c()
+
+    # SPI----------------------------------------------------
+    if sys.argv[1] == "SPI":
+        # GENERISANJE SPI SIGNALA
+        # ssh_call_spi()
+        ##########################
+        ##########################
+        # OBRADA SPI SIGNALA
+        spi_ch_data = sys.argv[2]
+        spi_ch_clock = sys.argv[3]
+        if int(spi_ch_data) > 4 or int(spi_ch_clock) > 4:
+            print "Works only for oscilloscopes with 4 channels maximum"
+            sys.exit()
+        data_final_spi, time = main(instrument_id, spi_ch_data)
+        clock_final_spi, time = main(instrument_id, spi_ch_clock)
+        csv_everything_spi(data_final_spi, clock_final_spi, time)
+        data = list(ripyl.streaming.samples_to_sample_stream(
+            data_final_spi, sample_period))
+        clock = list(ripyl.streaming.samples_to_sample_stream(
+            clock_final_spi, sample_period))
+        records = list(spi.spi_decode(
+            iter(clock), iter(data), lsb_first=False))
+        channels = OrderedDict([('CLK (V)', clock), ('MOSI (V)', data)])
+        plotter = rplot.Plotter()
+        plotter.plot(channels, records)
+        pylab.get_current_fig_manager().resize(
+            *pylab.get_current_fig_manager().window.maxsize())
+        plotter.show()
+        print "SPI - PLOT done"
+        plotter.save_plot("decoded-SPI.png")
+        print "SPI - PNG output done"
+        print "Exit figure to end program..."
+    # END SPI------------------------------------------------
+
+    # CAN----------------------------------------------------
+    elif sys.argv[1] == "CAN":
+        # serial_call_can()
+        pass
+    # END CAN------------------------------------------------
+
+    # LIN----------------------------------------------------
+    elif sys.argv[1] == "LIN":
+        # GENERISANJE LIN SIGNALA
+        # lin_data = "FILIP"
+        # lin_id = "50"
+        # lin_version = "2.0"
+        # serial_call_lin()
+        #########################
+        #########################
+        # OBRADA LIN SIGNALA
+        lin_ch_data = sys.argv[2]
+        if int(lin_ch_data) > 4:
+            print "Works only for oscilloscopes with 4 channels maximum"
+            sys.exit()
+        data_final_lin, time = main(instrument_id, lin_ch_data)
+        index_start_lin = 0
+
+        for i in range(len(data_final_lin)):
+            if data_final_lin[i] < 11.0:
+                index_start_lin = i
+                break
+
+        data_lin = data_final_lin[index_start_lin:]
+        time_lin = time[index_start_lin:]
+
+        for i in range(len(data_lin)):
+            if data_lin[i] <= 1.8:
+                data_lin[i] = 0
+            else:
+                data_lin[i] = 1
+
+        pylab.ylabel("data")
+        pylab.xlabel("time")
+        pylab.plot(time_lin, data_lin, color="r")
+        pylab.show()
+        csv_everything_lin(data_lin, time_lin)
+        data = list(ripyl.streaming.samples_to_sample_stream(
+            data_final_lin, sample_period))
+        records = list(lin.lin_decode(iter(data), baud_rate=1000))
+        channels = OrderedDict([('TX (V)', data)])
+        plotter = rplot.Plotter()
+        plotter.plot(channels, records)
+        pylab.get_current_fig_manager().resize(
+            *pylab.get_current_fig_manager().window.maxsize())
+        plotter.show()
+        print "LIN - PLOT done"
+        plotter.save_plot("decoded-LIN.png")
+        print "LIN - PNG output done"
+        print "Exit figure to end program..."
+
+    # END LIN------------------------------------------------
+
+    # I2C----------------------------------------------------
+    elif sys.argv[1] == "I2C":
+        # ssh_call_i2c()
+        i2c_ch_data = sys.argv[2]
+        i2c_ch_clock = sys.argv[3]
+        if int(i2c_ch_data) > 4 or int(i2c_ch_clock) > 4:
+            print "Works only for oscilloscopes with 4 channels maximum"
+            sys.exit()
+        data_final_i2c, time = main(instrument_id, i2c_ch_data)
+        clock_final_i2c, time = main(instrument_id, i2c_ch_clock)
+        csv_everything_i2c(data_final_i2c, clock_final_i2c, time)
+        data = list(ripyl.streaming.samples_to_sample_stream(
+            data_final_i2c, sample_period))
+        clock = list(ripyl.streaming.samples_to_sample_stream(
+            clock_final_i2c, sample_period))
+        records = list(i2c.i2c_decode(
+            iter(clock), iter(data)))
+        channels = OrderedDict([('SCL (V)', clock), ('SDA (V)', data)])
+        plotter = rplot.Plotter()
+        plotter.plot(channels, records)
+        pylab.get_current_fig_manager().resize(
+            *pylab.get_current_fig_manager().window.maxsize())
+        plotter.show()
+        print "I2C - PLOT done"
+        plotter.save_plot("decoded-I2C.png")
+        print "I2C - PNG output done"
+        print "Exit figure to end program..."
+    # END I2C------------------------------------------------
+    else:
+        print "Supported protocols are SPI,CAN,LIN,I2C!"
+        sys.exit()
+    sys.exit()

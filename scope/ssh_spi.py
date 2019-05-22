@@ -12,8 +12,7 @@ def Connect(server, port, user, password):
         return client
 
 
-def ssh_call():
+def ssh_call_spi():
     client = Connect("169.254.2.187", port=22, user="pi", password="pi")
     client.exec_command("python SPI-Test/readSpi.py\n")
     client.close()
-
