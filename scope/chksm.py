@@ -41,4 +41,4 @@ print "parity: 0b" + str(p1) + str(p0)
 for i in data:
     output += str(hex(i))[2:]
     output += " "
-print (output + str(hex(chcksum))[2:])
+print (id_unos + " " + output + str(hex(chcksum))[2:])

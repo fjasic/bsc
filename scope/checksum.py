@@ -34,4 +34,4 @@ def checksum(lin_data, lin_id, lin_version):
     for i in data:
         output += str(hex(i))[2:]
         output += " "
-    return str(output + str(hex(chcksum))[2:])
+    return (lin_id + " " + output + str(hex(chcksum))[2:])

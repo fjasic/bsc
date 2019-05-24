@@ -1,3 +1,4 @@
+# coding: utf-8
 import visa
 import numpy as np
 from struct import unpack
@@ -12,6 +13,7 @@ from ssh_spi import ssh_call_spi
 # from serial_lin import serial_call_lin
 from csv_output import *
 import warnings
+
 
 
 def main(instrument_id, channel_num):
@@ -32,18 +34,18 @@ def main(instrument_id, channel_num):
     ADC_wave = data[headerlen:-1]
 
     ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
-    volts = (ADC_wave - yoff)*ymult + yzero
-    time = np.arange(0, xincr*len(volts), xincr)
+    volts = (ADC_wave - yoff) * ymult + yzero
+    time = np.arange(0, xincr * len(volts), xincr)
     return volts, time
 
 
 def set_channel(scope, channel):
-    scope.write('DATA:SOU CH'+str(channel))
+    scope.write('DATA:SOU CH' + str(channel))
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 3 or len(sys.argv) > 4:
-        print "USAGE : readout.py --protocol[CAN,LIN,SPI,I2C] --data_channel[1,2,3,4] --clock_channel[1,2,3,4](only for SPI and I2C)"
+        print "USAGE : readout.py protocol[CAN,LIN,SPI,I2C] data_channel[1,2,3,4] clock_channel[1,2,3,4](only for SPI and I2C)"
         sys.exit()
     # YOU CAN SEE YOUR INSTRUMENT ID IN OpenChoiceDesktop APPLICATION
     instrument_id = 'USB0::0X0699::0x0401::C021046::INSTR'
@@ -127,10 +129,13 @@ if __name__ == "__main__":
         pylab.ylabel("data")
         pylab.xlabel("time")
 
-        pylab.plot(time_lin, data_lin, color="r")
-        pylab.show()
         # records = lin_decoded()
         csv_everything_lin(data_lin, time_lin)
+        pylab.plot(time_lin, data_lin, color="r")
+        pylab.show()
+        pylab.savefig("decoded-LIN.png")
+        print "LIN - PNG output done"
+        print "Exit figure to end program..."
         # print records
 
     # END LIN------------------------------------------------

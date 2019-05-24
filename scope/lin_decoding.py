@@ -29,27 +29,37 @@ def main():
     # uzorkovanje menjati po potrebi
     uzorkovanje = 50
     decoded_lin = []
-    pylab.plot(time_for_realz, voltage_for_realz)
-    pylab.show()
     for i in range(len(voltage_for_realz) / uzorkovanje):
         decoded_lin.append(
             int(most_common(voltage_for_realz[i * uzorkovanje:i * uzorkovanje + uzorkovanje])))
     # results = []
     sync_break = decoded_lin[0:13]
-    print "sync break is :" + str(sync_break)
+    print "sync break is:" + str(sync_break)
     sync_field = decoded_lin[15:22]
     sync_field_to_hex = ""
     for i in range(len(sync_field)):
         sync_field_to_hex += str(sync_field[i])
-    print "sync field is :" + str(sync_field)
     sync_field_hex = "{0:0>2X}".format(int(sync_field_to_hex, 2))
     print "sync field in hex representation: " + str(sync_field_hex)
     rest_of_lin = decoded_lin[25:len(decoded_lin)]
-    for x in range(8):
-        print "{0:0>2X}".format(
-            int("".join(map(str, decoded_lin[(25 + (x * 10)):(33 + (x * 10))][::-1])), 2))
-        print x
-
-
+    id_field = ""
+    parity_bits = ""
+    data_field = []
+    # length = 1(id_field) + [1-8](data) + 1(checksum)
+    length = 3
+    for x in range(length):
+        if x == 0:
+            id_field = "{0:0>2X}".format(
+                int("".join(map(str, decoded_lin[(25 + (x * 10)):(33 + (x * 10))][::-1])), 2))
+            parity_bits = "{0:b}".format(
+                int("".join(map(str, decoded_lin[(25 + (x * 10)):(33 + (x * 10))][::-1])), 2))[0:2]
+        else:
+            data_field.append("{0:0>2X}".format(
+                int("".join(map(str, decoded_lin[(25 + (x * 10)):(33 + (x * 10))][::-1])), 2)))
+    # print "parity bits are: p1-->" + id_field[0] + " p2-->" + id_field[1]
+    print "id field: " + id_field
+    print "parity_bits: p1-->" + parity_bits[0] + " p2-->" + parity_bits[1]
+    print "data_field: " + str(data_field[:-1])
+    print "checksum: " + str(data_field[-1])
 if __name__ == "__main__":
     main()
