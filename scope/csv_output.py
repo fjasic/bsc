@@ -9,12 +9,14 @@ def csv_everything_spi(data_final_spi, clock_final_spi, time):
             csvWriter.writerow(val)
     print "SPI - CSV output done"
 
+
 def csv_everything_i2c(data_final_i2c, clock_final_i2c, time):
     with open("i2c-capture.csv", "w") as csvCapture:
         csvWriter = csv.writer(csvCapture)
         for val in itertools.izip(time, clock_final_i2c, data_final_i2c):
             csvWriter.writerow(val)
     print "SPI - CSV output done"
+
 
 def csv_everything_can(data_final_can, time):
     with open("can-capture.csv", "w") as csvCapture:

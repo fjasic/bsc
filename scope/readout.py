@@ -5,15 +5,11 @@ import pylab
 import sys
 import ripyl
 import ripyl.protocol.spi as spi
-import ripyl.protocol.i2c as i2c
-import ripyl.protocol.can as can
-import ripyl.protocol.lin as lin
 import ripyl.streaming as stream
 from collections import OrderedDict
 import ripyl.util.plot as rplot
 from ssh_spi import ssh_call_spi
-from serial_can import serial_call_can
-from serial_lin import serial_call_lin
+# from serial_lin import serial_call_lin
 from csv_output import *
 import warnings
 
@@ -23,7 +19,6 @@ def main(instrument_id, channel_num):
     set_channel(scope, str(channel_num))
     scope.write('DATA:WIDTH 1')
     scope.write('DATA:ENC RPB')
-
     ymult = float(scope.ask('WFMPRE:YMULT?'))
     yzero = float(scope.ask('WFMPRE:YZERO?'))
     yoff = float(scope.ask('WFMPRE:YOFF?'))
@@ -118,37 +113,25 @@ if __name__ == "__main__":
         index_start_lin = 0
 
         for i in range(len(data_final_lin)):
-            if data_final_lin[i] < 11.0:
+            if data_final_lin[i] < 10.0:
                 index_start_lin = i
                 break
-
         data_lin = data_final_lin[index_start_lin:]
         time_lin = time[index_start_lin:]
-
         for i in range(len(data_lin)):
-            if data_lin[i] <= 1.8:
+            if data_lin[i] <= 2.0:
                 data_lin[i] = 0
             else:
                 data_lin[i] = 1
-
+        data_lin[0] = 0
         pylab.ylabel("data")
         pylab.xlabel("time")
+
         pylab.plot(time_lin, data_lin, color="r")
         pylab.show()
+        # records = lin_decoded()
         csv_everything_lin(data_lin, time_lin)
-        data = list(ripyl.streaming.samples_to_sample_stream(
-            data_final_lin, sample_period))
-        records = list(lin.lin_decode(iter(data), baud_rate=1000))
-        channels = OrderedDict([('TX (V)', data)])
-        plotter = rplot.Plotter()
-        plotter.plot(channels, records)
-        pylab.get_current_fig_manager().resize(
-            *pylab.get_current_fig_manager().window.maxsize())
-        plotter.show()
-        print "LIN - PLOT done"
-        plotter.save_plot("decoded-LIN.png")
-        print "LIN - PNG output done"
-        print "Exit figure to end program..."
+        # print records
 
     # END LIN------------------------------------------------
 
@@ -160,21 +143,6 @@ if __name__ == "__main__":
         if int(i2c_ch_data) > 4 or int(i2c_ch_clock) > 4:
             print "Works only for oscilloscopes with 4 channels maximum"
             sys.exit()
-        data_final_i2c, time = main(instrument_id, i2c_ch_data)
-        clock_final_i2c, time = main(instrument_id, i2c_ch_clock)
-        csv_everything_i2c(data_final_i2c, clock_final_i2c, time)
-        data = list(ripyl.streaming.samples_to_sample_stream(
-            data_final_i2c, sample_period))
-        clock = list(ripyl.streaming.samples_to_sample_stream(
-            clock_final_i2c, sample_period))
-        records = list(i2c.i2c_decode(
-            iter(clock), iter(data)))
-        channels = OrderedDict([('SCL (V)', clock), ('SDA (V)', data)])
-        plotter = rplot.Plotter()
-        plotter.plot(channels, records)
-        pylab.get_current_fig_manager().resize(
-            *pylab.get_current_fig_manager().window.maxsize())
-        plotter.show()
         print "I2C - PLOT done"
         plotter.save_plot("decoded-I2C.png")
         print "I2C - PNG output done"

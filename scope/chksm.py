@@ -1,11 +1,9 @@
 import sys
 
 
-
-    
 args = sys.argv[1:]
 if len(args) != 3:
-    print "usage: readout.py <string> <id> <lin_ver>"
+    print "usage: chksum.py <string> <id> <lin_ver>"
     sys.exit(1)
 
 ime_string = args[0]
@@ -30,7 +28,7 @@ else:
 chcksum = 0xff & (~chcksum)
 print "checksum: " + hex(chcksum)
 id_string = str(bin(int(id_unos, 16))[2:].zfill(8))
-print "id: " + id_string
+print "id: " + id_unos
 id = [ord(c) for c in id_string]
 p0 = id[0] ^ id[1] ^ id[2] ^ id[4]
 p1 = not(id[1] ^ id[3] ^ id[4] ^ id[5])
