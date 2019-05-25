@@ -1,65 +1,40 @@
-import csv
-import re
 from collections import Counter
-import pylab
-
-regexTime = re.compile(r".*,")
-regexVoltage = re.compile(r",.*")
-time = []
-voltage = []
 
 
 def most_common(lst):
     return max(set(lst), key=lst.count)
 
 
-def main():
-    flag_finished = 0
-    with open("lin-capture.csv", "r") as csvCapture:
-        string = csvCapture.read()
-    time = regexTime.findall(string)
-    voltage = regexVoltage.findall(string)
-
-    time_for_realz = []
-    voltage_for_realz = []
-    for i in range(len(time)):
-        time_for_realz.append(float(time[i][:-1]))
-    for i in range(len(time)):
-        voltage_for_realz.append(int(float(voltage[i][1:])))
-    # uzorkovanje menjati po potrebi
-    uzorkovanje = 50
+def lin_decoded(voltage, time, sample_interval):
     decoded_lin = []
-    for i in range(len(voltage_for_realz) / uzorkovanje):
+    for i in range(len(voltage) / sample_interval):
         decoded_lin.append(
-            int(most_common(voltage_for_realz[i * uzorkovanje:i * uzorkovanje + uzorkovanje])))
-    # results = []
+            int(most_common(voltage[i * sample_interval:i * sample_interval + sample_interval])))
+    results = []
     sync_break = decoded_lin[0:13]
-    print "sync break is:" + str(sync_break)
     sync_field = decoded_lin[15:22]
     sync_field_to_hex = ""
     for i in range(len(sync_field)):
         sync_field_to_hex += str(sync_field[i])
     sync_field_hex = "{0:0>2X}".format(int(sync_field_to_hex, 2))
-    print "sync field in hex representation: " + str(sync_field_hex)
     rest_of_lin = decoded_lin[25:len(decoded_lin)]
     id_field = ""
     parity_bits = ""
     data_field = []
-    # length = 1(id_field) + [1-8](data) + 1(checksum)
-    length = 3
+    id_field = "{0:0>2X}".format(
+                int("".join(map(str, decoded_lin[25:33][::-1])), 2))
+    parity_bits = "{0:b}".format(
+                int("".join(map(str, decoded_lin[25:33][::-1])), 2))[0:2]
+    if id_field >= 0x00 and id_field < 0x1f:
+        length = 2
+    elif id_field >= 0x20 and id_field < 0x2f:
+        length = 4
+    else:
+        length = 8
+    length = length
     for x in range(length):
-        if x == 0:
-            id_field = "{0:0>2X}".format(
-                int("".join(map(str, decoded_lin[(25 + (x * 10)):(33 + (x * 10))][::-1])), 2))
-            parity_bits = "{0:b}".format(
-                int("".join(map(str, decoded_lin[(25 + (x * 10)):(33 + (x * 10))][::-1])), 2))[0:2]
-        else:
             data_field.append("{0:0>2X}".format(
-                int("".join(map(str, decoded_lin[(25 + (x * 10)):(33 + (x * 10))][::-1])), 2)))
-    # print "parity bits are: p1-->" + id_field[0] + " p2-->" + id_field[1]
-    print "id field: " + id_field
-    print "parity_bits: p1-->" + parity_bits[0] + " p2-->" + parity_bits[1]
-    print "data_field: " + str(data_field[:-1])
-    print "checksum: " + str(data_field[-1])
-if __name__ == "__main__":
-    main()
+                int("".join(map(str, decoded_lin[(35 + (x * 10)):(43 + (x * 10))][::-1])), 2)))
+    checksum = int(("{0:0>2X}".format(
+                int("".join(map(str, decoded_lin[(35 + (length * 10)):(43 + (length * 10))][::-1])), 2))))
+    return id_field, int(parity_bits), data_field, checksum

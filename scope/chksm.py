@@ -16,7 +16,10 @@ for i in data:
     print hex(i),
 print " "
 chcksum = 0
+hex_int_id = int(id_unos, 16)
+print hex_int_id
 if lin_ver == "2.0":
+    chcksum = hex_int_id
     for i in data:
         chcksum += i
         if chcksum >= 256:
@@ -24,6 +27,7 @@ if lin_ver == "2.0":
 else:
     for i in data:
         chcksum += i
+    
 
 chcksum = 0xff & (~chcksum)
 print "checksum: " + hex(chcksum)

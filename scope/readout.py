@@ -4,16 +4,14 @@ import numpy as np
 from struct import unpack
 import pylab
 import sys
-import ripyl
-import ripyl.protocol.spi as spi
-import ripyl.streaming as stream
-from collections import OrderedDict
-import ripyl.util.plot as rplot
 from ssh_spi import ssh_call_spi
-# from serial_lin import serial_call_lin
+from lin_decoding import lin_decoded
 from csv_output import *
 import warnings
-
+import os
+import colorama
+# for colors in terminal
+colorama.init(autoreset=True)
 
 
 def main(instrument_id, channel_num):
@@ -45,7 +43,7 @@ def set_channel(scope, channel):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3 or len(sys.argv) > 4:
-        print "USAGE : readout.py protocol[CAN,LIN,SPI,I2C] data_channel[1,2,3,4] clock_channel[1,2,3,4](only for SPI and I2C)"
+        print "USAGE : readout.py protocol[CAN,LIN,SPI,I2C] protocol version(only for LIN)"
         sys.exit()
     # YOU CAN SEE YOUR INSTRUMENT ID IN OpenChoiceDesktop APPLICATION
     instrument_id = 'USB0::0X0699::0x0401::C021046::INSTR'
@@ -53,11 +51,8 @@ if __name__ == "__main__":
     # SAMPLE PERIOD IS 0.0000004 FOR TEKTRONIX DPO4104
     sample_period = 0.0000004
     # START--------------------------------------------------
-    # serial_call_lin()
-    # serial_call_can()
-    # ssh_call_spi()
-    # ssh_call_i2c()
-
+    # -------------------------------------------------------
+    # -------------------------------------------------------
     # SPI----------------------------------------------------
     if sys.argv[1] == "SPI":
         # GENERISANJE SPI SIGNALA
@@ -73,20 +68,8 @@ if __name__ == "__main__":
         data_final_spi, time = main(instrument_id, spi_ch_data)
         clock_final_spi, time = main(instrument_id, spi_ch_clock)
         csv_everything_spi(data_final_spi, clock_final_spi, time)
-        data = list(ripyl.streaming.samples_to_sample_stream(
-            data_final_spi, sample_period))
-        clock = list(ripyl.streaming.samples_to_sample_stream(
-            clock_final_spi, sample_period))
-        records = list(spi.spi_decode(
-            iter(clock), iter(data), lsb_first=False))
-        channels = OrderedDict([('CLK (V)', clock), ('MOSI (V)', data)])
-        plotter = rplot.Plotter()
-        plotter.plot(channels, records)
-        pylab.get_current_fig_manager().resize(
-            *pylab.get_current_fig_manager().window.maxsize())
-        plotter.show()
-        print "SPI - PLOT done"
-        plotter.save_plot("decoded-SPI.png")
+        # print "SPI - PLOT done"
+        # plotter.save_plot("decoded-SPI.png")
         print "SPI - PNG output done"
         print "Exit figure to end program..."
     # END SPI------------------------------------------------
@@ -100,44 +83,89 @@ if __name__ == "__main__":
     # LIN----------------------------------------------------
     elif sys.argv[1] == "LIN":
         # GENERISANJE LIN SIGNALA
-        # lin_data = "FILIP"
-        # lin_id = "50"
-        # lin_version = "2.0"
         # serial_call_lin()
         #########################
         #########################
         # OBRADA LIN SIGNALA
-        lin_ch_data = sys.argv[2]
-        if int(lin_ch_data) > 4:
-            print "Works only for oscilloscopes with 4 channels maximum"
-            sys.exit()
-        data_final_lin, time = main(instrument_id, lin_ch_data)
-        index_start_lin = 0
+        time_total = []
+        voltage_total = []
+        length_of_dir = os.listdir("E:\\scope")
+        number_of_files = 0
+        while number_of_files < len(length_of_dir):
+            time = []
+            voltage = []
+            csv_to_list = []
+            file_to_open = "E:\\scope\\All_%s.csv" % (str(number_of_files+1))
+            print file_to_open,
+            with open(file_to_open, "r") as csvCapture:
+                reader = csv.reader(csvCapture)
+                for row in reader:
+                    csv_to_list.append(row)
+            csv_to_list_final = csv_to_list[16:]
+            for i in range(len(csv_to_list_final)-1):
+                time.append(float(csv_to_list_final[i][0]))
+                voltage.append(float(csv_to_list_final[i][1]))
 
-        for i in range(len(data_final_lin)):
-            if data_final_lin[i] < 10.0:
-                index_start_lin = i
-                break
-        data_lin = data_final_lin[index_start_lin:]
-        time_lin = time[index_start_lin:]
-        for i in range(len(data_lin)):
-            if data_lin[i] <= 2.0:
-                data_lin[i] = 0
+            time_total += time
+            voltage_total += voltage
+            index_start_lin = 0
+            for i in range(len(voltage)):
+                if voltage[i] < 10.0:
+                    index_start_lin = i
+                    break
+            voltage = voltage[index_start_lin:]
+            time = time[index_start_lin:]
+            for i in range(len(voltage)):
+                if voltage[i] <= 2.0:
+                    voltage[i] = 0
+                else:
+                    voltage[i] = 1
+            voltage[0] = 0
+            sample_interval = 50
+            lin_id, lin_parity_bits, lin_data, lin_checksum = lin_decoded(
+                voltage, time, sample_interval)
+            output = "ID: " + str(lin_id) + "||PARITY BITS: " + \
+                str(lin_parity_bits) + "||DATA: " + str(lin_data) + \
+                "||CHECKSUM: " + str(lin_checksum)
+            # CHECKSUM AND PARITY BITS
+            checksum = 0
+            lin_ver = sys.argv[2]
+            data = [int(c) for c in lin_data]
+            checksum = 0
+            hex_int_id = int(lin_id, 16)
+            new_int_id = hex_int_id + 0x00
+            hex_id = hex(new_int_id)
+            final_parity = int(bin(int(hex_id, 16))[2:4])
+            if lin_ver == "-e":
+                for i in data:
+                    checksum += i
+                checksum += hex_int_id
+                if checksum >= 256:
+                    checksum -= 255
+            elif lin_ver == "-c" or hex_int_id == 60 or hex_int_id == 61 or hex_int_id == 62 or hex_int_id == 63:  # frames for diagnostic
+                for i in data:
+                    checksum += i
             else:
-                data_lin[i] = 1
-        data_lin[0] = 0
-        pylab.ylabel("data")
-        pylab.xlabel("time")
+                print "not correct lin version protocol(-c for classic[1.1,1.2,1.3] and -e for enhanced[2.0,2.1,2.2])"
+                sys.exit()
 
-        # records = lin_decoded()
-        csv_everything_lin(data_lin, time_lin)
-        pylab.plot(time_lin, data_lin, color="r")
-        pylab.show()
-        pylab.savefig("decoded-LIN.png")
-        print "LIN - PNG output done"
-        print "Exit figure to end program..."
-        # print records
-
+            hex_int_checksum = int("0x" + str(checksum), 16)
+            # inversion
+            new_int_checksum = 0xff - hex_int_checksum
+            final_checksum = int(hex(new_int_checksum)[-2:])
+            if lin_checksum == final_checksum and final_parity == lin_parity_bits:
+                print colorama.Fore.GREEN + output
+                number_of_files += 1
+            elif lin_checksum != final_checksum:
+                print colorama.Fore.RED + output + "[CHECKSUM ERROR]"
+                number_of_files += 1
+            elif final_parity != lin_parity_bits:
+                print colorama.Fore.RED + output + "[PARITY ERROR]"
+                number_of_files += 1
+            else:
+                print colorama.Fore.RED + output + \
+                    "[PARITY AND CHECKSUM ERROR]"
+                number_of_files += 1
     # END LIN------------------------------------------------
 
     # I2C----------------------------------------------------
@@ -149,7 +177,6 @@ if __name__ == "__main__":
             print "Works only for oscilloscopes with 4 channels maximum"
             sys.exit()
         print "I2C - PLOT done"
-        plotter.save_plot("decoded-I2C.png")
         print "I2C - PNG output done"
         print "Exit figure to end program..."
     # END I2C------------------------------------------------
