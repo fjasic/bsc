@@ -6,7 +6,9 @@ import pylab
 import sys
 from ssh_spi import ssh_call_spi
 from lin_decoding import lin_decoded
-from csv_output import *
+from spi_decoding import spi_decoded
+# from csv_output import *
+import csv
 import warnings
 import os
 import colorama
@@ -42,14 +44,12 @@ def set_channel(scope, channel):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3 or len(sys.argv) > 4:
-        print "USAGE : readout.py protocol[CAN,LIN,SPI,I2C] protocol version(only for LIN)"
+    if len(sys.argv) < 2 or len(sys.argv) > 3:
+        print "USAGE : readout.py protocol[CAN,LIN,SPI,I2C] protocol_version(only for LIN)[-c for classic -e for enhanced]"
         sys.exit()
     # YOU CAN SEE YOUR INSTRUMENT ID IN OpenChoiceDesktop APPLICATION
     instrument_id = 'USB0::0X0699::0x0401::C021046::INSTR'
     warnings.simplefilter(action='ignore', category=FutureWarning)
-    # SAMPLE PERIOD IS 0.0000004 FOR TEKTRONIX DPO4104
-    sample_period = 0.0000004
     # START--------------------------------------------------
     # -------------------------------------------------------
     # -------------------------------------------------------
@@ -60,18 +60,35 @@ if __name__ == "__main__":
         ##########################
         ##########################
         # OBRADA SPI SIGNALA
-        spi_ch_data = sys.argv[2]
-        spi_ch_clock = sys.argv[3]
-        if int(spi_ch_data) > 4 or int(spi_ch_clock) > 4:
-            print "Works only for oscilloscopes with 4 channels maximum"
-            sys.exit()
-        data_final_spi, time = main(instrument_id, spi_ch_data)
-        clock_final_spi, time = main(instrument_id, spi_ch_clock)
-        csv_everything_spi(data_final_spi, clock_final_spi, time)
-        # print "SPI - PLOT done"
-        # plotter.save_plot("decoded-SPI.png")
-        print "SPI - PNG output done"
-        print "Exit figure to end program..."
+        csv_to_list = []
+        time = []
+        clock_voltage = []
+        data_voltage = []
+        with open("csv\\spi-capture.csv", "r") as csvCapture:
+            reader = csv.reader(csvCapture)
+            for row in reader:
+                csv_to_list.append(row)
+        for i in range(len(csv_to_list)-1):
+            time.append(float(csv_to_list[i][0]))
+            clock_voltage.append(float(csv_to_list[i][1]))
+            data_voltage.append(float(csv_to_list[i][2]))
+        for i in range(len(time)):
+            if clock_voltage[i] > 3.0:
+                clock_voltage[i] = 1
+            else:
+                clock_voltage[i] = 0
+            if data_voltage[i] > 3.0:
+                data_voltage[i] = 1
+            else:
+                data_voltage[i] = 0
+        pylab.subplot(2, 1, 1)
+        pylab.plot(time, clock_voltage)
+        pylab.subplot(2, 1, 2)
+        pylab.plot(time, data_voltage)
+        pylab.show()
+        sample_period = 13
+        data = spi_decoded(clock_voltage, data_voltage, time, sample_period)
+        print "data: " + str(data)
     # END SPI------------------------------------------------
 
     # CAN----------------------------------------------------
