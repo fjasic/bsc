@@ -1,0 +1,10 @@
+Kratko uputstvo pri dolasku studentata u Automotive Base Products (TTTech)
+
+1. Otici na adresu: \\samba03\nastavni_materijali\ukrcavanje\
+2. Preuzeti XLS: UkrcavanjeSpisak2018-19_Pavkovic.xlsx
+	- Uneti podatke za studenta, tehnickog mentora, datum pocetka i temu rada
+	- Poslati mejlom na bogdan.pavkovic@rt-rk.com
+3. Uputiti studente i tehnicke mentore na postojanje foldera iz tacke 1 
+i obavezati ih da se detaljno upute u sadrzaj svih dokumentata,
+kao i da popune preostale informacije u XLS (spisak nepolozenih ispita)
+i o svakom korako obaveste mejlom na bogdan.pavkovic@rt-rk.com

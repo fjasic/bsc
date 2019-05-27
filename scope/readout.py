@@ -4,39 +4,51 @@ import numpy as np
 from struct import unpack
 import pylab
 import sys
-from ssh_spi import ssh_call_spi
-from lin_decoding import lin_decoded
-from spi_decoding import spi_decoded
-# from csv_output import *
+import matplotlib.pyplot as plt
 import csv
 import warnings
 import os
 import colorama
+import time
+from ssh_spi import ssh_call_spi
+from lin_decoding import lin_decoded
+from spi_decoding import spi_decoded
+from can_decoding import can_decoded
+import datetime
 # for colors in terminal
 colorama.init(autoreset=True)
 
 
-def main(instrument_id, channel_num):
+def main(instrument_id):
+    # Connect to the instrument
     scope = visa.ResourceManager().open_resource(instrument_id)
-    set_channel(scope, str(channel_num))
-    scope.write('DATA:WIDTH 1')
-    scope.write('DATA:ENC RPB')
-    ymult = float(scope.ask('WFMPRE:YMULT?'))
-    yzero = float(scope.ask('WFMPRE:YZERO?'))
-    yoff = float(scope.ask('WFMPRE:YOFF?'))
-    xincr = float(scope.ask('WFMPRE:XINCR?'))
 
-    scope.write('CURVE?')
-    data = scope.read_raw()
+    # Configure how files are saved, setting resolution to reduced will be faster, but
+    # you get less actual data
+    scope.write("SAVE:WAVEFORM:FILEFORMAT SPREADSHEET")
+    scope.write("SAVE:WAVEFORM:SPREADSHEET:RESOLUTION FULL")
 
-    headerlen = 2 + int(data[1])
-    header = data[:headerlen]
-    ADC_wave = data[headerlen:-1]
+    # Create directory where files will be saved
+    scope.write("FILESYSTEM:MAKEDIR \"F:/scope\"")
 
-    ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
-    volts = (ADC_wave - yoff) * ymult + yzero
-    time = np.arange(0, xincr * len(volts), xincr)
-    return volts, time
+    # Start single sequence acquisition
+    scope.write("ACQ:STOPA SEQ")
+    loop = 0
+
+    while True:
+        # increment the loop counter
+        loop += 1
+
+        print ('On Loop %s' % loop)
+        # Arm trigger, then loop until scope has triggered
+        scope.write("ACQ:STATE ON")
+        while '1' in scope.ask("ACQ:STATE?"):
+            time.sleep(0.1)
+        current_time_file = str(datetime.datetime.now().time())
+        # save all waveforms, then wait for the waveforms to be written
+        scope.write("SAVE:WAVEFORM ALL, \"F:/scope/%s%s.csv\"" % (current_time_file,loop))
+        while '1' in scope.ask("BUSY?"):
+            time.sleep(0.1)
 
 
 def set_channel(scope, channel):
@@ -64,6 +76,7 @@ if __name__ == "__main__":
         time = []
         clock_voltage = []
         data_voltage = []
+        sample_period = 13
         with open("csv\\spi-capture.csv", "r") as csvCapture:
             reader = csv.reader(csvCapture)
             for row in reader:
@@ -86,7 +99,6 @@ if __name__ == "__main__":
         pylab.subplot(2, 1, 2)
         pylab.plot(time, data_voltage)
         pylab.show()
-        sample_period = 13
         data = spi_decoded(clock_voltage, data_voltage, time, sample_period)
         print "data: " + str(data)
     # END SPI------------------------------------------------
@@ -94,7 +106,51 @@ if __name__ == "__main__":
     # CAN----------------------------------------------------
     elif sys.argv[1] == "CAN":
         # serial_call_can()
-        pass
+        csv_to_list = []
+        time = []
+        data_voltage_high = []
+        data_voltage_low = []
+        sample_period = 100
+        with open("F:\\scope\\All_CAN_1.csv", "r") as csvCapture:
+            reader = csv.reader(csvCapture)
+            for row in reader:
+                csv_to_list.append(row)
+        csv_to_list_final = csv_to_list[16:]
+        for i in range(len(csv_to_list_final)-1):
+            time.append(float(csv_to_list_final[i][0]))
+            data_voltage_high.append(float(csv_to_list_final[i][1]))
+            data_voltage_low.append(float(csv_to_list_final[i][2]))
+        # plt.subplot(2, 1, 1)
+        # plt.xlabel("time")
+        # plt.ylabel("voltage_high")
+        # plt.plot(time, data_voltage_high)
+        # plt.subplot(2, 1, 2)
+        # plt.xlabel("time")
+        # plt.ylabel("voltage_low")
+        # plt.plot(time, data_voltage_low)
+        # plt.show()
+        index_start_can = 0
+        index_end_can = 0
+        for i in range(len(time)):
+            if data_voltage_high[i] > 3.0:
+                data_voltage_high[i] = 1
+            else:
+                data_voltage_high[i] = 0
+        for i in range(len(data_voltage_high)):
+            if data_voltage_high[i] == 1:
+                index_start_can = i
+                break
+        reversed_high_voltage = data_voltage_high[::-1]
+        for i in range(len(data_voltage_high)):
+            if reversed_high_voltage[i] == 1:
+                index_end_can = len(data_voltage_high) - i
+                break
+        print index_start_can
+        print index_end_can
+        to_decode_data_high = data_voltage_high[index_start_can-1:]
+        to_decode_time = time[index_start_can-1:]
+        can_decoded(to_decode_data_high, to_decode_time, sample_period)
+
     # END CAN------------------------------------------------
 
     # LIN----------------------------------------------------
@@ -106,13 +162,13 @@ if __name__ == "__main__":
         # OBRADA LIN SIGNALA
         time_total = []
         voltage_total = []
-        length_of_dir = os.listdir("E:\\scope")
+        length_of_dir = os.listdir("F:\\scope")
         number_of_files = 0
         while number_of_files < len(length_of_dir):
             time = []
             voltage = []
             csv_to_list = []
-            file_to_open = "E:\\scope\\All_%s.csv" % (str(number_of_files+1))
+            file_to_open = "F:\\scope\\All_%s.csv" % (str(number_of_files+1))
             print file_to_open,
             with open(file_to_open, "r") as csvCapture:
                 reader = csv.reader(csvCapture)
@@ -188,11 +244,6 @@ if __name__ == "__main__":
     # I2C----------------------------------------------------
     elif sys.argv[1] == "I2C":
         # ssh_call_i2c()
-        i2c_ch_data = sys.argv[2]
-        i2c_ch_clock = sys.argv[3]
-        if int(i2c_ch_data) > 4 or int(i2c_ch_clock) > 4:
-            print "Works only for oscilloscopes with 4 channels maximum"
-            sys.exit()
         print "I2C - PLOT done"
         print "I2C - PNG output done"
         print "Exit figure to end program..."
