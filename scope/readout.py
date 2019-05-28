@@ -46,7 +46,8 @@ def main(instrument_id):
             time.sleep(0.1)
         current_time_file = str(datetime.datetime.now().time())
         # save all waveforms, then wait for the waveforms to be written
-        scope.write("SAVE:WAVEFORM ALL, \"F:/scope/%s%s.csv\"" % (current_time_file,loop))
+        scope.write("SAVE:WAVEFORM ALL, \"F:/scope/%s%s.csv\"" %
+                    (current_time_file, loop))
         while '1' in scope.ask("BUSY?"):
             time.sleep(0.1)
 
@@ -111,7 +112,7 @@ if __name__ == "__main__":
         data_voltage_high = []
         data_voltage_low = []
         sample_period = 100
-        with open("F:\\scope\\All_CAN_1.csv", "r") as csvCapture:
+        with open("F:\\scope\\DAY3_CAN_1.csv", "r") as csvCapture:
             reader = csv.reader(csvCapture)
             for row in reader:
                 csv_to_list.append(row)
@@ -145,10 +146,8 @@ if __name__ == "__main__":
             if reversed_high_voltage[i] == 1:
                 index_end_can = len(data_voltage_high) - i
                 break
-        print index_start_can
-        print index_end_can
-        to_decode_data_high = data_voltage_high[index_start_can-1:]
-        to_decode_time = time[index_start_can-1:]
+        to_decode_data_high = data_voltage_high[index_start_can:index_end_can]
+        to_decode_time = time[index_start_can:index_end_can]
         can_decoded(to_decode_data_high, to_decode_time, sample_period)
 
     # END CAN------------------------------------------------
