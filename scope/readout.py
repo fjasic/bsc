@@ -1,55 +1,82 @@
 # coding: utf-8
+# -------------------------------------------------------------------------------
+#  Automating oscilloscope for continious recording and decoding of CAN, LIN, 
+#  I2C,SPI protocols 
+
+# python                             2.7.15
+# PyVISA                             1.9.1
+# matplotlib                         2.2.4
+# colorama                           0.4.1
+
+# -------------------------------------------------------------------------------
 import visa
 import numpy as np
 from struct import unpack
-import pylab
 import sys
 import matplotlib.pyplot as plt
-import csv
 import warnings
 import os
+import csv
 import colorama
-import time
+import time as time_global
+import datetime
 from ssh_spi import ssh_call_spi
+from serial_can import serial_call_can
 from lin_decoding import lin_decoded
 from spi_decoding import spi_decoded
 from can_decoding import can_decoded
-import datetime
+from csv_everything import csv_everything_can, csv_everything_i2c, csv_everything_lin, csv_everything_spi
+from kmp import KnuthMorrisPratt
 # for colors in terminal
 colorama.init(autoreset=True)
 
 
-def main(instrument_id):
-    # Connect to the instrument
-    scope = visa.ResourceManager().open_resource(instrument_id)
+def main(instrument_id, channel_num):
+    volts_all = []
+    time_final = []
+    time_all = []
+    try:
+        scope = visa.ResourceManager().open_resource(instrument_id)
+        set_channel(scope, str(channel_num))
+        scope.write('DATA:WIDTH 1')
+        scope.write('DATA:ENC RPB')
+        # Start single sequence acquisition
+        scope.write("ACQ:STOPA SEQ")
+        loop = 0
+        while True:
+            # increment the loop counter
+            loop += 1
 
-    # Configure how files are saved, setting resolution to reduced will be faster, but
-    # you get less actual data
-    scope.write("SAVE:WAVEFORM:FILEFORMAT SPREADSHEET")
-    scope.write("SAVE:WAVEFORM:SPREADSHEET:RESOLUTION FULL")
+            print ('On Loop %s' % loop)
+            # Arm trigger, then loop until scope has triggered
+            scope.write("ACQ:STATE ON")
+            while '1' in scope.ask("ACQ:STATE?"):
+                pass
+            # save all waveforms, then wait for the waveforms to be written
+            ymult = float(scope.ask('WFMPRE:YMULT?'))
+            yzero = float(scope.ask('WFMPRE:YZERO?'))
+            yoff = float(scope.ask('WFMPRE:YOFF?'))
+            xincr = float(scope.ask('WFMPRE:XINCR?'))
+            # getting data from oscilloscope
+            scope.write('CURVE?')
+            data = scope.read_raw()
 
-    # Create directory where files will be saved
-    scope.write("FILESYSTEM:MAKEDIR \"F:/scope\"")
-
-    # Start single sequence acquisition
-    scope.write("ACQ:STOPA SEQ")
-    loop = 0
-
-    while True:
-        # increment the loop counter
-        loop += 1
-
-        print ('On Loop %s' % loop)
-        # Arm trigger, then loop until scope has triggered
-        scope.write("ACQ:STATE ON")
-        while '1' in scope.ask("ACQ:STATE?"):
-            time.sleep(0.1)
-        current_time_file = str(datetime.datetime.now().time())
-        # save all waveforms, then wait for the waveforms to be written
-        scope.write("SAVE:WAVEFORM ALL, \"F:/scope/%s%s.csv\"" %
-                    (current_time_file, loop))
-        while '1' in scope.ask("BUSY?"):
-            time.sleep(0.1)
+            headerlen = 2 + int(data[1])
+            header = data[:headerlen]
+            ADC_wave = data[headerlen:-1]
+            ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
+            volts = (ADC_wave - yoff)*ymult + yzero
+            time = np.arange(0, xincr*len(volts), xincr)
+            for i in range(len(time)):
+                time[i] = float(time[i]) + 1.0 * (loop-1)
+            for i in range(len(volts)):
+                volts_all.append(float(volts[i]))
+            for i in range(len(time)):
+                time_final.append(time)
+            while '1' in scope.ask("BUSY?"):
+                pass
+    except KeyboardInterrupt:
+        return volts, time
 
 
 def set_channel(scope, channel):
@@ -58,25 +85,25 @@ def set_channel(scope, channel):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2 or len(sys.argv) > 3:
-        print "USAGE : readout.py protocol[CAN,LIN,SPI,I2C] protocol_version(only for LIN)[-c for classic -e for enhanced]"
+        print """USAGE : readout.py protocol[CAN,LIN,SPI,I2C] protocol_version
+        (only for LIN)[-c for classic -e for enhanced]"""
         sys.exit()
     # YOU CAN SEE YOUR INSTRUMENT ID IN OpenChoiceDesktop APPLICATION
     instrument_id = 'USB0::0X0699::0x0401::C021046::INSTR'
+    # ignoring FutureWarning
     warnings.simplefilter(action='ignore', category=FutureWarning)
     # START--------------------------------------------------
-    # -------------------------------------------------------
-    # -------------------------------------------------------
+    
     # SPI----------------------------------------------------
     if sys.argv[1] == "SPI":
-        # GENERISANJE SPI SIGNALA
+        # GENERATING SPI SIGNAL
         # ssh_call_spi()
-        ##########################
-        ##########################
-        # OBRADA SPI SIGNALA
+        # READOUT OF RECORDED SPI SIGNAL
         csv_to_list = []
         time = []
         clock_voltage = []
         data_voltage = []
+        # change sample period, look on osclilloscope
         sample_period = 13
         with open("csv\\spi-capture.csv", "r") as csvCapture:
             reader = csv.reader(csvCapture)
@@ -86,6 +113,7 @@ if __name__ == "__main__":
             time.append(float(csv_to_list[i][0]))
             clock_voltage.append(float(csv_to_list[i][1]))
             data_voltage.append(float(csv_to_list[i][2]))
+        # leveling voltage at 1.0 and 0 depending on raw voltage levels
         for i in range(len(time)):
             if clock_voltage[i] > 3.0:
                 clock_voltage[i] = 1
@@ -95,70 +123,105 @@ if __name__ == "__main__":
                 data_voltage[i] = 1
             else:
                 data_voltage[i] = 0
-        pylab.subplot(2, 1, 1)
-        pylab.plot(time, clock_voltage)
-        pylab.subplot(2, 1, 2)
-        pylab.plot(time, data_voltage)
-        pylab.show()
+        plt.subplot(2, 1, 1)
+        plt.plot(time, clock_voltage)
+        plt.subplot(2, 1, 2)
+        plt.plot(time, data_voltage)
+        plt.show()
+        # decoding spi and returning decoded data
         data = spi_decoded(clock_voltage, data_voltage, time, sample_period)
         print "data: " + str(data)
     # END SPI------------------------------------------------
 
     # CAN----------------------------------------------------
     elif sys.argv[1] == "CAN":
+        # GENERATING CAN SIGNAL
         # serial_call_can()
+        # READOUT OF RECORDED CAN SIGNAL
         csv_to_list = []
-        time = []
-        data_voltage_high = []
+        time_to_decode = []
+        data_voltage_high_to_decode = []
         data_voltage_low = []
         sample_period = 100
-        with open("F:\\scope\\DAY3_CAN_1.csv", "r") as csvCapture:
-            reader = csv.reader(csvCapture)
-            for row in reader:
-                csv_to_list.append(row)
-        csv_to_list_final = csv_to_list[16:]
-        for i in range(len(csv_to_list_final)-1):
-            time.append(float(csv_to_list_final[i][0]))
-            data_voltage_high.append(float(csv_to_list_final[i][1]))
-            data_voltage_low.append(float(csv_to_list_final[i][2]))
+        """getting can frames, only from channel 1 (CAN_H),
+        because channel 2 (CAN_L) is mirror of first channel"""
+        data_final_can, time_can = main(instrument_id, "1")
+        # with open("C:\\Users\\fjasic\\Desktop\\test.csv", "r") as csvCapture:
+        #     reader = csv.reader(csvCapture)
+        #     for row in reader:
+        #         csv_to_list.append(row)
+        # csv_to_list_final = csv_to_list[16:]
+        # for i in range(len(csv_to_list_final)-1):
+        #     time.append(float(csv_to_list_final[i][0]))
+        #     data_voltage_high.append(float(csv_to_list_final[i][1]))
+        #     data_voltage_low.append(float(csv_to_list_final[i][2]))
+        # for i in range(len(csv_to_list_final)-1):
+        #     time.append(float(csv_to_list_final[i][0]))
+        #     data_voltage_high.append(float(csv_to_list_final[i][1]))
+        #     data_voltage_low.append(float(csv_to_list_final[i][2]))
         # plt.subplot(2, 1, 1)
         # plt.xlabel("time")
         # plt.ylabel("voltage_high")
-        # plt.plot(time, data_voltage_high)
+        # plt.plot(time_can, data_final_can)
         # plt.subplot(2, 1, 2)
         # plt.xlabel("time")
         # plt.ylabel("voltage_low")
         # plt.plot(time, data_voltage_low)
         # plt.show()
-        index_start_can = 0
-        index_end_can = 0
-        for i in range(len(time)):
-            if data_voltage_high[i] > 3.0:
-                data_voltage_high[i] = 1
+        # index_start_can = 0
+        # index_end_can = 0
+        
+        # leveling voltage at 1.0 and 0 depending on raw voltage levels
+        for i in range(len(data_final_can)):
+            if data_final_can[i] > 3.0:
+                data_final_can[i] = 1
             else:
-                data_voltage_high[i] = 0
-        for i in range(len(data_voltage_high)):
-            if data_voltage_high[i] == 1:
-                index_start_can = i
-                break
-        reversed_high_voltage = data_voltage_high[::-1]
-        for i in range(len(data_voltage_high)):
-            if reversed_high_voltage[i] == 1:
-                index_end_can = len(data_voltage_high) - i
-                break
-        to_decode_data_high = data_voltage_high[index_start_can:index_end_can]
-        to_decode_time = time[index_start_can:index_end_can]
-        can_decoded(to_decode_data_high, to_decode_time, sample_period)
+                data_final_can[i] = 0
+        # plt.xlabel("time")
+        # plt.ylabel("voltage_high")
+        # plt.plot(time_can, data_final_can)
+        # plt.show()
+        csv_everything_can(data_final_can, time_can)
+        with open("can-capture.csv", "r") as csvCapture:
+            reader = csv.reader(csvCapture)
+            for row in reader:
+                csv_to_list.append(row)
+        csv_to_list_final = csv_to_list
+        for i in range(len(csv_to_list_final)-1):
+            time_to_decode.append(float(csv_to_list_final[i][0]))
+            data_voltage_high_to_decode.append(float(csv_to_list_final[i][1]))
+        inter_frame = []
+        for i in range(28*10):
+            inter_frame.append(0.0)
+        inter_frame_start = []
+        for s in KnuthMorrisPratt(data_voltage_high_to_decode, inter_frame):
+            inter_frame_start.append(s)
+            
+        plt.plot(time_to_decode[inter_frame_start[0]+280:inter_frame_start[1]], data_voltage_high_to_decode[inter_frame_start[0]+280:inter_frame_start[1]])
+        plt.show()
+        # for i in range(len(data_voltage_high)):
+        #     if data_voltage_high[i] == 1:
+        #         index_start_can = i
+        #         break
+        # reversed_high_voltage = data_voltage_high[::-1]
+        # for i in range(len(data_voltage_high)):
+        #     if reversed_high_voltage[i] == 1:
+        #         index_end_can = len(data_voltage_high) - i
+        #         break
+        # to_decode_data_high = data_voltage_high[index_start_can:index_end_can]
+        # to_decode_time = time[index_start_can:index_end_can]
+        for i in range(len(inter_frame_start)-1):
+            can_decoded(data_voltage_high_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]], time_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]], 10)
+            # plt.plot(time_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]], data_voltage_high_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]])
+            # plt.show()
 
     # END CAN------------------------------------------------
 
     # LIN----------------------------------------------------
     elif sys.argv[1] == "LIN":
-        # GENERISANJE LIN SIGNALA
+        # GENERATING LIN SIGNAL
         # serial_call_lin()
-        #########################
-        #########################
-        # OBRADA LIN SIGNALA
+        # READOUT OF RECORDED LIN SIGNAL
         time_total = []
         voltage_total = []
         length_of_dir = os.listdir("F:\\scope")
@@ -242,7 +305,9 @@ if __name__ == "__main__":
 
     # I2C----------------------------------------------------
     elif sys.argv[1] == "I2C":
+        # GENERATING I2C SIGNAL
         # ssh_call_i2c()
+        # READOUT OF RECORDED I2C SIGNAL
         print "I2C - PLOT done"
         print "I2C - PNG output done"
         print "Exit figure to end program..."

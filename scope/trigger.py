@@ -32,7 +32,7 @@ while True:
     while '1' in scope.ask("ACQ:STATE?"):
         time.sleep(0.1)
     # save all waveforms, then wait for the waveforms to be written
-    scope.write("SAVE:WAVEFORM ALL, \"E:/scope/DAY3_from_platform_CAN_%s.csv\"" % loop)
+    scope.write("SAVE:WAVEFORM ALL, \"E:/scope/CAN_dan3_%s.csv\"" % loop)
     scope.write("RECALL:WAVEFORM 1.csv", "C:/scope")
     while '1' in scope.ask("BUSY?"):
         time.sleep(0.1)

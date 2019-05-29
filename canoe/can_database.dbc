@@ -1,0 +1,49 @@
+VERSION ""
+
+
+NS_ : 
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: can_sec_1 can_pri_1
+
+
+BO_ 1 message_from_sec_to_pri: 8 can_sec_1
+ SG_ signal_from_sec_to_pri : 1|8@1- (1,0) [0|0] ""  can_pri_1
+
+BO_ 0 message_from_pri_to_sec: 8 can_pri_1
+ SG_ signal_from_pri_to_sec : 8|8@1- (1,0) [0|0] ""  can_sec_1
+
+
+
+BA_DEF_  "BusType" STRING ;
+BA_DEF_DEF_  "BusType" "CAN";
+

@@ -9,7 +9,6 @@ def pairwise(seq):
 
 
 # Knuth-Morris-Pratt string matching
-# David Eppstein, UC Irvine, 1 Mar 2002
 def KnuthMorrisPratt(text, pattern):
     '''Yields all starting positions of copies of the pattern in the text.
 Calling conventions are similar to string.find, but its arguments can be

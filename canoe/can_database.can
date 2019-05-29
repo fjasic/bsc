@@ -1,0 +1,47 @@
+variables
+{
+}
+
+void MainTest()
+{
+//--- begin generated part
+  ChkConfig_Init("user");
+  SetupConditionsGeneral();
+  SetupConditionsForNodecan_sec_1();
+//--- end generated part
+
+//--- please insert your code below this comment
+
+//--- begin generated part
+  WaitUntilEnd();
+//--- end generated part
+}
+
+//--- begin generated part
+testcase WaitUntilEnd()
+{
+  TestWaitForMeasurementEnd(0);  // waits until measurement has finished
+}
+//--- end generated part
+
+//--- begin generated part
+void SetupConditionsGeneral()
+{
+  TestAddCondition(ChkStart_UndefinedMessageReceived());
+  TestAddCondition(ChkStart_ErrorFramesOccured());
+}
+//--- end generated part
+
+//--- begin generated part
+void SetupConditionsForNodecan_sec_1()
+{
+
+// cycle time supervision
+  TestAddCondition(ChkStart_NodeMsgsRelOccurrenceViolation(can_sec_1, 1,1.1));
+
+// dlc supervision
+  TestAddCondition(ChkStart_InconsistentTxDlc(can_sec_1));
+
+// check the signal values
+}
+//--- end generated part
