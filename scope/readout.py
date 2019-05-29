@@ -29,6 +29,8 @@ from csv_everything import csv_everything_can, csv_everything_i2c, csv_everythin
 from kmp import KnuthMorrisPratt
 # for colors in terminal
 colorama.init(autoreset=True)
+# TODO:maybe automatic setting of controls on oscilloscope and i2c decoding,do a clean-up and more comments,doxygen,maybe asil
+# TODO:testing,testing,testing
 
 
 def main(instrument_id, channel_num):
@@ -146,31 +148,7 @@ if __name__ == "__main__":
         """getting can frames, only from channel 1 (CAN_H),
         because channel 2 (CAN_L) is mirror of first channel"""
         data_final_can, time_can = main(instrument_id, "1")
-        # with open("C:\\Users\\fjasic\\Desktop\\test.csv", "r") as csvCapture:
-        #     reader = csv.reader(csvCapture)
-        #     for row in reader:
-        #         csv_to_list.append(row)
-        # csv_to_list_final = csv_to_list[16:]
-        # for i in range(len(csv_to_list_final)-1):
-        #     time.append(float(csv_to_list_final[i][0]))
-        #     data_voltage_high.append(float(csv_to_list_final[i][1]))
-        #     data_voltage_low.append(float(csv_to_list_final[i][2]))
-        # for i in range(len(csv_to_list_final)-1):
-        #     time.append(float(csv_to_list_final[i][0]))
-        #     data_voltage_high.append(float(csv_to_list_final[i][1]))
-        #     data_voltage_low.append(float(csv_to_list_final[i][2]))
-        # plt.subplot(2, 1, 1)
-        # plt.xlabel("time")
-        # plt.ylabel("voltage_high")
-        # plt.plot(time_can, data_final_can)
-        # plt.subplot(2, 1, 2)
-        # plt.xlabel("time")
-        # plt.ylabel("voltage_low")
-        # plt.plot(time, data_voltage_low)
-        # plt.show()
-        # index_start_can = 0
-        # index_end_can = 0
-        
+
         # leveling voltage at 1.0 and 0 depending on raw voltage levels
         for i in range(len(data_final_can)):
             if data_final_can[i] > 3.0:
@@ -199,21 +177,9 @@ if __name__ == "__main__":
             
         plt.plot(time_to_decode[inter_frame_start[0]+280:inter_frame_start[1]], data_voltage_high_to_decode[inter_frame_start[0]+280:inter_frame_start[1]])
         plt.show()
-        # for i in range(len(data_voltage_high)):
-        #     if data_voltage_high[i] == 1:
-        #         index_start_can = i
-        #         break
-        # reversed_high_voltage = data_voltage_high[::-1]
-        # for i in range(len(data_voltage_high)):
-        #     if reversed_high_voltage[i] == 1:
-        #         index_end_can = len(data_voltage_high) - i
-        #         break
-        # to_decode_data_high = data_voltage_high[index_start_can:index_end_can]
-        # to_decode_time = time[index_start_can:index_end_can]
+
         for i in range(len(inter_frame_start)-1):
             can_decoded(data_voltage_high_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]], time_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]], 10)
-            # plt.plot(time_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]], data_voltage_high_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]])
-            # plt.show()
 
     # END CAN------------------------------------------------
 
