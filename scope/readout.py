@@ -1,7 +1,7 @@
 # coding: utf-8
 # -------------------------------------------------------------------------------
-#  Automating oscilloscope for continious recording and decoding of CAN, LIN, 
-#  I2C,SPI protocols 
+#  Automating oscilloscope for continious recording and decoding of CAN, LIN,
+#  I2C,SPI protocols
 
 # python                             2.7.15
 # PyVISA                             1.9.1
@@ -25,18 +25,16 @@ from serial_can import serial_call_can
 from lin_decoding import lin_decoded
 from spi_decoding import spi_decoded
 from can_decoding import can_decoded
-from csv_everything import csv_everything_can, csv_everything_i2c, csv_everything_lin, csv_everything_spi
+from csv_everything import csv_everything_can
 from kmp import KnuthMorrisPratt
 # for colors in terminal
 colorama.init(autoreset=True)
-# TODO:maybe automatic setting of controls on oscilloscope and i2c decoding,do a clean-up and more comments,doxygen,maybe asil
-# TODO:testing,testing,testing
+# TODO:automatic setting of controls on oscilloscope and i2c decoding, doxygen
 
 
 def main(instrument_id, channel_num):
-    volts_all = []
+    volts_final = []
     time_final = []
-    time_all = []
     try:
         scope = visa.ResourceManager().open_resource(instrument_id)
         set_channel(scope, str(channel_num))
@@ -49,7 +47,7 @@ def main(instrument_id, channel_num):
             # increment the loop counter
             loop += 1
 
-            print ('On Loop %s' % loop)
+            print ".",
             # Arm trigger, then loop until scope has triggered
             scope.write("ACQ:STATE ON")
             while '1' in scope.ask("ACQ:STATE?"):
@@ -69,12 +67,11 @@ def main(instrument_id, channel_num):
             ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
             volts = (ADC_wave - yoff)*ymult + yzero
             time = np.arange(0, xincr*len(volts), xincr)
+            for i in range(len(volts)):
+                volts_final.append(volts[i])
             for i in range(len(time)):
                 time[i] = float(time[i]) + 1.0 * (loop-1)
-            for i in range(len(volts)):
-                volts_all.append(float(volts[i]))
-            for i in range(len(time)):
-                time_final.append(time)
+                time_final.append(time[i])
             while '1' in scope.ask("BUSY?"):
                 pass
     except KeyboardInterrupt:
@@ -94,8 +91,9 @@ if __name__ == "__main__":
     instrument_id = 'USB0::0X0699::0x0401::C021046::INSTR'
     # ignoring FutureWarning
     warnings.simplefilter(action='ignore', category=FutureWarning)
+    print colorama.Fore.YELLOW + "press Ctrl+C to stop measurment"
     # START--------------------------------------------------
-    
+
     # SPI----------------------------------------------------
     if sys.argv[1] == "SPI":
         # GENERATING SPI SIGNAL
@@ -145,6 +143,8 @@ if __name__ == "__main__":
         data_voltage_high_to_decode = []
         data_voltage_low = []
         sample_period = 100
+        print "if " + colorama.Fore.RED + "red " + colorama.Fore.WHITE + "color shows up,data is not correct"
+        print "else " +colorama.Fore.GREEN + "green " + colorama.Fore.WHITE + "it's all good!"
         """getting can frames, only from channel 1 (CAN_H),
         because channel 2 (CAN_L) is mirror of first channel"""
         data_final_can, time_can = main(instrument_id, "1")
@@ -155,10 +155,11 @@ if __name__ == "__main__":
                 data_final_can[i] = 1
             else:
                 data_final_can[i] = 0
-        # plt.xlabel("time")
-        # plt.ylabel("voltage_high")
-        # plt.plot(time_can, data_final_can)
-        # plt.show()
+        plt.xlabel("time")
+        plt.ylabel("voltage_high")
+        plt.plot(time_can, data_final_can)
+        plt.show()
+        print "\n"
         csv_everything_can(data_final_can, time_can)
         with open("can-capture.csv", "r") as csvCapture:
             reader = csv.reader(csvCapture)
@@ -169,17 +170,70 @@ if __name__ == "__main__":
             time_to_decode.append(float(csv_to_list_final[i][0]))
             data_voltage_high_to_decode.append(float(csv_to_list_final[i][1]))
         inter_frame = []
-        for i in range(28*10):
-            inter_frame.append(0.0)
         inter_frame_start = []
+        for i in range(31*10):
+            inter_frame.append(0.0)
         for s in KnuthMorrisPratt(data_voltage_high_to_decode, inter_frame):
             inter_frame_start.append(s)
-            
-        plt.plot(time_to_decode[inter_frame_start[0]+280:inter_frame_start[1]], data_voltage_high_to_decode[inter_frame_start[0]+280:inter_frame_start[1]])
-        plt.show()
+        if inter_frame_start == []:
+            inter_frame = []
+            for i in range(30*10):
+                inter_frame.append(0.0)
+            for s in KnuthMorrisPratt(data_voltage_high_to_decode, inter_frame):
+                inter_frame_start.append(s)
+            if inter_frame_start == []:
+                inter_frame = []
+                for i in range(29*10):
+                    inter_frame.append(0.0)
+                for s in KnuthMorrisPratt(data_voltage_high_to_decode, inter_frame):
+                    inter_frame_start.append(s)
+                if inter_frame_start == []:
+                    inter_frame = []
+                    for i in range(28*10):
+                        inter_frame.append(0.0)
+                    for s in KnuthMorrisPratt(data_voltage_high_to_decode, inter_frame):
+                        inter_frame_start.append(s)
+                    if inter_frame_start == []:
+                        inter_frame = []
+                        for i in range(27*10):
+                            inter_frame.append(0.0)
+                        for s in KnuthMorrisPratt(data_voltage_high_to_decode, inter_frame):
+                            inter_frame_start.append(s)
+                        plt.plot(time_to_decode[inter_frame_start[0]+270:inter_frame_start[1]],
+                                 data_voltage_high_to_decode[inter_frame_start[0]+270:inter_frame_start[1]])
+                        plt.show()
+                        for i in range(len(inter_frame_start)-1):
+                            can_decoded(data_voltage_high_to_decode[inter_frame_start[i]+270:inter_frame_start[i+1]],
+                                        time_to_decode[inter_frame_start[i]+270:inter_frame_start[i+1]], 10)
+                    else:
+                        plt.plot(time_to_decode[inter_frame_start[0]+280:inter_frame_start[1]],
+                                 data_voltage_high_to_decode[inter_frame_start[0]+280:inter_frame_start[1]])
+                        plt.show()
+                        for i in range(len(inter_frame_start)-1):
 
-        for i in range(len(inter_frame_start)-1):
-            can_decoded(data_voltage_high_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]], time_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]], 10)
+                            can_decoded(data_voltage_high_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]],
+                                        time_to_decode[inter_frame_start[i]+280:inter_frame_start[i+1]], 10)
+                else:
+                    plt.plot(time_to_decode[inter_frame_start[0]+290:inter_frame_start[1]],
+                             data_voltage_high_to_decode[inter_frame_start[0]+290:inter_frame_start[1]])
+                    plt.show()
+                    for i in range(len(inter_frame_start)-1):
+                        can_decoded(data_voltage_high_to_decode[inter_frame_start[i]+290:inter_frame_start[i+1]],
+                                    time_to_decode[inter_frame_start[i]+290:inter_frame_start[i+1]], 10)
+            else:
+                plt.plot(time_to_decode[inter_frame_start[0]+300:inter_frame_start[1]],
+                         data_voltage_high_to_decode[inter_frame_start[0]+300:inter_frame_start[1]])
+                plt.show()
+                for i in range(len(inter_frame_start)-1):
+                    can_decoded(data_voltage_high_to_decode[inter_frame_start[i]+300:inter_frame_start[i+1]],
+                                time_to_decode[inter_frame_start[i]+300:inter_frame_start[i+1]], 10)
+        else:
+            plt.plot(time_to_decode[inter_frame_start[0]+310:inter_frame_start[1]],
+                     data_voltage_high_to_decode[inter_frame_start[0]+310:inter_frame_start[1]])
+            plt.show()
+            for i in range(len(inter_frame_start)-1):
+                can_decoded(data_voltage_high_to_decode[inter_frame_start[i]+310:inter_frame_start[i+1]],
+                            time_to_decode[inter_frame_start[i]+310:inter_frame_start[i+1]], 10)
 
     # END CAN------------------------------------------------
 
