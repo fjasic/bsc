@@ -1,7 +1,17 @@
+# coding: utf-8
+"""
+Send data for one CAN frame via serial port.
+
+Used modules in serial_can.py :
+--serial
+"""
 import serial
 
 
 def serial_call_can():
+    """
+    Send data for one CAN frame via serial port.
+    """
     com3 = serial.Serial(port="COM3", baudrate=115200)
     com4 = serial.Serial(port="COM4", baudrate=115200)
     com3.write("CAN USER CLOSE CH2\r\n")

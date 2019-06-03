@@ -1,32 +1,48 @@
 # coding: utf-8
-# -------------------------------------------------------------------------------
-#  Decoding can signal and checking Cyclic redundancy check
-# -------------------------------------------------------------------------------
-
+"""
+Decodes CAN signal,returns decoded data and calculates Cyclic redundancy check.
+Used modules in can_decoding.py :
+--matplotlib                         2.2.4
+--collections
+--kmp from my script KnuthMorrisPratt(kmp.py)
+--colorama                           0.4.1
+"""
 from collections import Counter
 import matplotlib.pyplot as plt
 from kmp import KnuthMorrisPratt
 import colorama
-# for colors in terminal
+# For colors in terminal.
 colorama.init(autoreset=True)
 
 
 def most_common(lst):
+    """
+    Return the most common element from list.
+    -----------------------------------------
+    @param lst -- List from which most common element is found.
+    -----------------------------------------
+    """
     return max(set(lst), key=lst.count)
 
 
-def can_decoded(voltage_high, time, sample_interval):
+def can_decoded(voltage_high, sample_interval):
+    """
+    Decodes CAN signal from raw voltage and sample interval.
+    -----------------------------------------
+    @param voltage_high -- Voltage of CAN_H.
+    @param sample_interval -- Sample interval of CAN_H.
+    -----------------------------------------
+    """
     start_decoding_voltage_high = []
-    # reversing waveform
+    # Reversing waveform.
     for i in range(len(voltage_high) / sample_interval):
-        if int(most_common(voltage_high[i * sample_interval:i
-                                        * sample_interval + sample_interval])) == 0:
+        if int(most_common(voltage_high[i * sample_interval:i * sample_interval + sample_interval])) == 0:
             start_decoding_voltage_high.append(1)
         else:
             start_decoding_voltage_high.append(0)
     for_deletion = []
 
-    # bit stuffing removal
+    # Bit stuffing removal.
     for s in KnuthMorrisPratt(start_decoding_voltage_high, [0, 0, 0, 0, 0, 1]):
         for_deletion.append(s)
     for s in KnuthMorrisPratt(start_decoding_voltage_high, [1, 1, 1, 1, 1, 0]):
@@ -52,7 +68,7 @@ def can_decoded(voltage_high, time, sample_interval):
         crc_can = start_decoding_voltage_high[19 +
                                               8*length_can:19+8*length_can+15]
         for_crc = start_decoding_voltage_high[:19+8*length_can]
-        # PRINTING
+        # Printing.
         print colorama.Fore.GREEN + "id(standard): " + \
             "{0:0>2X}".format(int("".join(map(str, id_can)), 2)),
         print colorama.Fore.GREEN + "||length: " + str(length_can),
@@ -86,7 +102,7 @@ def can_decoded(voltage_high, time, sample_interval):
             else:
                 result_crc[14-i] = 0
         if crc_can == result_crc:
-            # PRINTING
+            # Printing.
             print colorama.Fore.GREEN + "id(standard): " + \
                 "{0:0>2X}".format(int("".join(map(str, id_can)), 2)),
             print colorama.Fore.GREEN + "||length: " + str(length_can),
@@ -144,7 +160,7 @@ def can_decoded(voltage_high, time, sample_interval):
             else:
                 result_crc[14-i] = 0
         if crc_can == result_crc:
-            # PRINTING
+            # Printing.
             print colorama.Fore.GREEN + "id_A(extended): " + \
                 "{0:0>2X}".format(int("".join(map(str, id_can_a)), 2)),
             print colorama.Fore.GREEN + "id_B(extended): " + \

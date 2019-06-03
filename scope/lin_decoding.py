@@ -1,11 +1,30 @@
+# coding: utf-8
+"""
+Decodes LIN signal and returns decoded data.
+Used modules in lin_decoding.py :
+--collections
+"""
 from collections import Counter
 
 
 def most_common(lst):
+    """
+    Return the most common element from list.
+    -----------------------------------------
+    @param lst -- List from which most common element is found.
+    -----------------------------------------
+    """
     return max(set(lst), key=lst.count)
 
 
-def lin_decoded(voltage, time, sample_interval):
+def lin_decoded(voltage, sample_interval):
+    """
+    Decodes LIN signal from raw voltage and sample interval.
+    -----------------------------------------
+    @param voltage -- Voltage of LIN.
+    @param sample_interval -- Sample rate of oscilloscope.
+    -----------------------------------------
+    """
     decoded_lin = []
     for i in range(len(voltage) / sample_interval):
         decoded_lin.append(

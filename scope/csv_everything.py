@@ -1,8 +1,12 @@
 # coding: utf-8
-# -------------------------------------------------------------------------------
-#  As the name says, outputing recorded data to csv
-#  TODO : outputing decoded data
-# -------------------------------------------------------------------------------
+"""
+Outputing recorded data from oscilloscope to csv.
+
+Used modules in csv_everything.py :
+--csv                                1.0
+--itertools
+--colorama                           0.4.1
+"""
 import csv
 import itertools
 import colorama
@@ -10,33 +14,63 @@ import colorama
 colorama.init(autoreset=True)
 
 
-def csv_everything_spi(data_final_spi, clock_final_spi, time):
-    with open("spi-capture.csv", "w") as csvCapture:
+def csv_everything_spi(spi_data_to_csv, spi_clock_to_csv, time):
+    """
+    Outputing SPI data to csv.
+    --------------------------
+    @param spi_data_to -- List of SPI data channel to be recored in csv.
+    @param spi_clock_to_csv -- List SPI clock channel to be recorded in csv.
+    @param time -- List of time in which interval SPI frame is recoreded.
+    --------------------------
+    """
+    with open("csv\\spi-capture.csv", "w") as csvCapture:
         csvWriter = csv.writer(csvCapture)
-        for val in itertools.izip(time, clock_final_spi, data_final_spi):
+        for val in itertools.izip(time, spi_clock_to_csv, spi_data_to_csv):
             csvWriter.writerow(val)
     print colorama.Fore.MAGENTA + "SPI - CSV output done"
 
 
-def csv_everything_i2c(data_final_i2c, clock_final_i2c, time):
-    with open("i2c-capture.csv", "w") as csvCapture:
+def csv_everything_i2c(i2c_data_to_csv, i2c_clock_to_csv, time):
+    """
+    Outputing I2C data to csv.
+    --------------------------
+    @param i2c_data_to_csv -- I2C data channel to be recored in csv.
+    @param i2c_clock_to_csv -- I2C clock channel to be recorded in csv.
+    @param time -- List of time in which interval I2C frame is recoreded.
+    --------------------------
+    """
+    with open("csv\\i2c-capture.csv", "w") as csvCapture:
         csvWriter = csv.writer(csvCapture)
-        for val in itertools.izip(time, clock_final_i2c, data_final_i2c):
+        for val in itertools.izip(time, i2c_clock_to_csv, i2c_data_to_csv):
             csvWriter.writerow(val)
     print colorama.Fore.MAGENTA + "SPI - CSV output done"
 
 
-def csv_everything_can(data_final_can, time):
-    with open("can-capture.csv", "w") as csvCapture:
+def csv_everything_can(can_data_to_csv, time):
+    """
+    Outputing CAN data to csv.
+    --------------------------
+    @param can_data_to_csv -- CAN data channel to be recored in csv.
+    @param time -- List of time in which interval CAN frame is recoreded.
+    --------------------------
+    """
+    with open("csv\\can-capture.csv", "w") as csvCapture:
         csvWriter = csv.writer(csvCapture)
-        for val in itertools.izip(time, data_final_can):
+        for val in itertools.izip(time, can_data_to_csv):
             csvWriter.writerow(val)
     print colorama.Fore.MAGENTA + "CAN - CSV output done"
 
 
-# def csv_everything_lin(data_final_lin, time):
-#     with open("lin-capture.csv", "w") as csvCapture:
-#         csvWriter = csv.writer(csvCapture)
-#         for val in itertools.izip(time, data_final_lin):
-#             csvWriter.writerow(val)
-# print colorama.Fore.MAGENTA +"LIN - CSV output done"
+def csv_everything_lin(lin_data_to_csv, time):
+    """
+    Outputing LIN data to csv.
+    --------------------------
+    @param lin_data_to_csv -- LIN data channel to be recored in csv.
+    @param time -- List of time in which interval LIN frame is recoreded.
+    --------------------------
+    """
+    with open("csv\\lin-capture.csv", "w") as csvCapture:
+        csvWriter = csv.writer(csvCapture)
+        for val in itertools.izip(time, lin_data_to_csv):
+            csvWriter.writerow(val)
+    print colorama.Fore.MAGENTA + "LIN - CSV output done"

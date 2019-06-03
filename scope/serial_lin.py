@@ -1,8 +1,19 @@
+# coding: utf-8
+"""
+Send data for one LIN frame via serial port.
+
+Used modules in serial_lin.py :
+--serial
+--checksum from my script checksum(checksum.py)
+"""
 import serial
 from checksum import checksum
 
 
 def serial_call_lin():
+    """
+    Send data for one LIN frame via serial port.
+    """
     lin_data = "f"
     lin_id = "00"
     lin_version = "1.3"

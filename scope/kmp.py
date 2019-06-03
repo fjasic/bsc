@@ -1,23 +1,31 @@
+# coding: utf-8
+"""
+    KnuthMorrisPratt algorithm.
+    Used modules in kmp.py :
+    --from future import generators
+    --itertools
+"""
+
 from __future__ import generators
 from itertools import izip, cycle, tee
 
 
-def pairwise(seq):
-    a, b = tee(seq)
-    next(b)
-    return izip(a, b)
-
-
-# Knuth-Morris-Pratt string matching
+# Knuth-Morris-Pratt string matching.
 def KnuthMorrisPratt(text, pattern):
-    '''Yields all starting positions of copies of the pattern in the text.
-Calling conventions are similar to string.find, but its arguments can be
-lists or iterators, not just strings, it returns all matches, not just
-the first one, and it does not need the whole text in memory at once.
-Whenever it yields, it will have read the text exactly up to and including
-the match that caused the yield.'''
+    """
+    Yields all starting positions of copies of the pattern in the text.
+    Calling conventions are similar to string.find, but its arguments can be
+    lists or iterators, not just strings, it returns all matches, not just
+    the first one, and it does not need the whole text in memory at once.
+    Whenever it yields, it will have read the text exactly up to and including
+    the match that caused the yield.
+    --------------------------------------------------------------------------
+    @param text -- From what we search pattern.
+    @param pattern -- Patter we want to find in text.
+    --------------------------------------------------------------------------
+    """
 
-    # allow indexing into pattern and protect against change during yield
+    # Allow indexing into pattern and protect against change during yield.
     pattern = list(pattern)
 
     # build table of shift amounts
@@ -28,7 +36,7 @@ the match that caused the yield.'''
             shift += shifts[pos-shift]
         shifts[pos+1] = shift
 
-    # do the actual search
+    # Do the actual search.
     startPos = 0
     matchLen = 0
     for c in text:
