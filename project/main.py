@@ -56,13 +56,13 @@ def main(instrument_id, channel_num):
     """
     volts_final = []
     time_final = []
-    # try:
     scope = visa.ResourceManager().open_resource(instrument_id)
     set_channel(scope, str(channel_num))
     scope.write('DATA:WIDTH 1')
     scope.write('DATA:ENC RPB')
     # Start single sequence acquisition
     scope.write("ACQ:STOPA SEQ")
+    
     ymult = float(scope.ask('WFMPRE:YMULT?'))
     yzero = float(scope.ask('WFMPRE:YZERO?'))
     yoff = float(scope.ask('WFMPRE:YOFF?'))
@@ -75,8 +75,12 @@ def main(instrument_id, channel_num):
     header = data[:headerlen]
     ADC_wave = data[headerlen:-1]
     ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
+    
     volts = (ADC_wave - yoff)*ymult + yzero
     time = np.arange(0, xincr*len(volts), xincr)
+    return volts, time
+    # try:
+    
     #     loop = 0
     #     while True:
     #         # increment the loop counter
@@ -110,7 +114,7 @@ def main(instrument_id, channel_num):
     #         while '1' in scope.ask("BUSY?"):
     #             pass
     # except KeyboardInterrupt:
-    return volts, time
+    #     return volts, time
 
 
 def set_channel(scope, channel):
@@ -126,8 +130,7 @@ def set_channel(scope, channel):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2 or len(sys.argv) > 3:
-        print """USAGE : readout.py protocol[CAN,LIN,SPI,I2C] protocol_version
-        (only for LIN)[-c for classic -e for enhanced]"""
+        print """USAGE : main.py protocol[CAN,LIN,SPI,I2C] protocol_version(only for LIN)[-c for classic -e for enhanced]"""
         sys.exit()
     instrument_id = 'USB0::0X0699::0x0401::C021046::INSTR'
     warnings.simplefilter(action='ignore', category=FutureWarning)  # Ignoring FutureWarning.
@@ -141,7 +144,7 @@ if __name__ == "__main__":
         time = []
         clock_voltage = []
         data_voltage = []
-        sample_period = 13  # Change sample period, look on osclilloscope.
+        sample_period = 5  # Change sample period, look on osclilloscope.
         with open("csv\\spi-capture.csv", "r") as csvCapture:
             reader = csv.reader(csvCapture)
             for row in reader:
@@ -336,12 +339,12 @@ if __name__ == "__main__":
 
     # I2C----------------------------------------------------
     elif sys.argv[1] == "I2C":
-        # ssh_call_i2c() # Generating I2C signal.
+        # ssh_call_i2c()  # Generating I2C signal.
         csv_to_list = []
         time_to_decode = []
         sda_to_decode = []
         scl_to_decode = []
-        sample_period = 10
+        sample_period = 5
         sda_i2c, time_i2c = main(instrument_id, "1")
         scl_i2c, _ = main(instrument_id, "2")
         csv_everything_i2c(sda_i2c, scl_i2c, time_i2c)
@@ -374,9 +377,6 @@ if __name__ == "__main__":
         plt.plot(time_to_decode, scl_to_decode)
         plt.show()
         i2c_decoded(sda_to_decode, scl_to_decode, sample_period)
-        print "I2C - PLOT done"
-        print "I2C - PNG output done"
-        print "Exit figure to end program..."
     # END I2C------------------------------------------------
     else:
         print "Supported protocols are SPI,CAN,LIN,I2C!"
