@@ -62,7 +62,6 @@ def main(instrument_id, channel_num):
     scope.write('DATA:ENC RPB')
     # Start single sequence acquisition
     scope.write("ACQ:STOPA SEQ")
-    
     ymult = float(scope.ask('WFMPRE:YMULT?'))
     yzero = float(scope.ask('WFMPRE:YZERO?'))
     yoff = float(scope.ask('WFMPRE:YOFF?'))
@@ -75,12 +74,11 @@ def main(instrument_id, channel_num):
     header = data[:headerlen]
     ADC_wave = data[headerlen:-1]
     ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
-    
     volts = (ADC_wave - yoff)*ymult + yzero
     time = np.arange(0, xincr*len(volts), xincr)
     return volts, time
     # try:
-    
+
     #     loop = 0
     #     while True:
     #         # increment the loop counter
