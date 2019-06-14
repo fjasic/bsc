@@ -58,10 +58,12 @@ def main(instrument_id, channel_num):
     time_final = []
     scope = visa.ResourceManager().open_resource(instrument_id)
     set_channel(scope, str(channel_num))
+    scope = visa.ResourceManager().open_resource(instrument_id)
+    set_channel(scope, str(channel_num))
     scope.write('DATA:WIDTH 1')
     scope.write('DATA:ENC RPB')
-    # Start single sequence acquisition
-    scope.write("ACQ:STOPA SEQ")
+    # scale = float(scope.ask("HORizontal:SCAle?"))
+
     ymult = float(scope.ask('WFMPRE:YMULT?'))
     yzero = float(scope.ask('WFMPRE:YZERO?'))
     yoff = float(scope.ask('WFMPRE:YOFF?'))
@@ -76,9 +78,12 @@ def main(instrument_id, channel_num):
     ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
     volts = (ADC_wave - yoff)*ymult + yzero
     time = np.arange(0, xincr*len(volts), xincr)
-    return volts, time
+    return volts, time #, scale
     # try:
-
+    #     scope.write('DATA:WIDTH 1')
+    #     scope.write('DATA:ENC RPB')
+    #     # Start single sequence acquisition
+    #     scope.write("ACQ:STOPA SEQ")
     #     loop = 0
     #     while True:
     #         # increment the loop counter
@@ -104,11 +109,11 @@ def main(instrument_id, channel_num):
     #         ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
     #         volts = (ADC_wave - yoff)*ymult + yzero
     #         time = np.arange(0, xincr*len(volts), xincr)
-    #         for i in range(len(volts)):
-    #             volts_final.append(volts[i])
-    #         for i in range(len(time)):
-    #             time[i] = float(time[i]) + 1.0 * (loop-1)
-    #             time_final.append(time[i])
+    #         # for i in range(len(volts)):
+    #         #     volts_final.append(volts[i])
+    #         # for i in range(len(time)):
+    #         #     time[i] = float(time[i]) + 1.0 * (loop-1)
+    #         #     time_final.append(time[i])
     #         while '1' in scope.ask("BUSY?"):
     #             pass
     # except KeyboardInterrupt:
@@ -185,7 +190,7 @@ if __name__ == "__main__":
         because channel 2 (CAN_L) is mirror of first channel"""
         data_final_can, time_can = main(instrument_id, "1")
         for i in range(len(data_final_can)):  # Leveling voltage at 1.0 and 0 depending on raw voltage levels.
-            if data_final_can[i] > 3.0:
+            if data_final_can[i] > 2.5:
                 data_final_can[i] = 1
             else:
                 data_final_can[i] = 0
@@ -342,9 +347,9 @@ if __name__ == "__main__":
         time_to_decode = []
         sda_to_decode = []
         scl_to_decode = []
+        sda_i2c, time_i2c, sample_period = main(instrument_id, "1")
+        scl_i2c, _, sample_period = main(instrument_id, "2")
         sample_period = 5
-        sda_i2c, time_i2c = main(instrument_id, "1")
-        scl_i2c, _ = main(instrument_id, "2")
         csv_everything_i2c(sda_i2c, scl_i2c, time_i2c)
         with open("csv\\i2c-capture.csv", "r") as csvCapture:
             reader = csv.reader(csvCapture)

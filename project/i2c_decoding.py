@@ -50,6 +50,7 @@ def i2c_decoded(sda_to_decode, scl_to_decode, sample_period):
     match_sda = []
     match_scl = []
     match = []
+    print "clock" + str(start_decoding_i2c_clock)
     for s in KnuthMorrisPratt(start_decoding_i2c_data, [1, 1, 1, 1, 1, 1]):
         match_sda.append(s)
     for s in KnuthMorrisPratt(start_decoding_i2c_clock, [1, 1, 1, 1, 1, 1, 1]):
