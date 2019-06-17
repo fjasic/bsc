@@ -170,7 +170,7 @@ def can_decoded(voltage_high, sample_interval):
             print colorama.Fore.GREEN + "||crc: " + str(crc_can)
         else:
             print colorama.Fore.RED + "id(standard): " + \
-                "{0:0>2X}".format(int("".join(map(str, id_can)), 2)),
+                "{0:0>2X}".format(int("".join(map(str, id_can_a)), 2)),
             print colorama.Fore.RED + "id_B(extended): " + \
                 "{0:0>2X}".format(int("".join(map(str, id_can_b)), 2)),
             print colorama.Fore.RED + "||length: " + str(length_can),

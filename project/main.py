@@ -58,66 +58,67 @@ def main(instrument_id, channel_num):
     time_final = []
     scope = visa.ResourceManager().open_resource(instrument_id)
     set_channel(scope, str(channel_num))
-    scope = visa.ResourceManager().open_resource(instrument_id)
-    set_channel(scope, str(channel_num))
-    scope.write('DATA:WIDTH 1')
-    scope.write('DATA:ENC RPB')
+    # scope.write('DATA:WIDTH 1')
+    # scope.write('DATA:ENC RPB')
     # scale = float(scope.ask("HORizontal:SCAle?"))
 
-    ymult = float(scope.ask('WFMPRE:YMULT?'))
-    yzero = float(scope.ask('WFMPRE:YZERO?'))
-    yoff = float(scope.ask('WFMPRE:YOFF?'))
-    xincr = float(scope.ask('WFMPRE:XINCR?'))
-    # getting data from oscilloscope
-    scope.write('CURVE?')
-    data = scope.read_raw()
+    # ymult = float(scope.ask('WFMPRE:YMULT?'))
+    # yzero = float(scope.ask('WFMPRE:YZERO?'))
+    # yoff = float(scope.ask('WFMPRE:YOFF?'))
+    # xincr = float(scope.ask('WFMPRE:XINCR?'))
+    # # getting data from oscilloscope
+    # scope.write('CURVE?')
+    # data = scope.read_raw()
 
-    headerlen = 2 + int(data[1])
-    header = data[:headerlen]
-    ADC_wave = data[headerlen:-1]
-    ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
-    volts = (ADC_wave - yoff)*ymult + yzero
-    time = np.arange(0, xincr*len(volts), xincr)
-    return volts, time #, scale
-    # try:
-    #     scope.write('DATA:WIDTH 1')
-    #     scope.write('DATA:ENC RPB')
-    #     # Start single sequence acquisition
-    #     scope.write("ACQ:STOPA SEQ")
-    #     loop = 0
-    #     while True:
-    #         # increment the loop counter
-    #         loop += 1
+    # headerlen = 2 + int(data[1])
+    # header = data[:headerlen]
+    # ADC_wave = data[headerlen:-1]
+    # ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
+    # volts = (ADC_wave - yoff)*ymult + yzero
+    # time = np.arange(0, xincr*len(volts), xincr)
+    # for i in range(len(volts)):
+    #     volts[i] = float(volts[i])
+    # for i in range(len(time)):
+    #     time[i] = float(time[i])
+    # return volts, time 
+    try:
+        scope.write('DATA:WIDTH 1')
+        scope.write('DATA:ENC RPB')
+        # Start single sequence acquisition
+        scope.write("ACQ:STOPA SEQ")
+        loop = 0
+        while True:
+            # increment the loop counter
+            loop += 1
 
-    #         print ".",
-    #         # Arm trigger, then loop until scope has triggered
-    #         scope.write("ACQ:STATE ON")
-    #         while '1' in scope.ask("ACQ:STATE?"):
-    #             pass
-    #         # save all waveforms, then wait for the waveforms to be written
-    #         ymult = float(scope.ask('WFMPRE:YMULT?'))
-    #         yzero = float(scope.ask('WFMPRE:YZERO?'))
-    #         yoff = float(scope.ask('WFMPRE:YOFF?'))
-    #         xincr = float(scope.ask('WFMPRE:XINCR?'))
-    #         # getting data from oscilloscope
-    #         scope.write('CURVE?')
-    #         data = scope.read_raw()
+            print ".",
+            # Arm trigger, then loop until scope has triggered
+            scope.write("ACQ:STATE ON")
+            while '1' in scope.ask("ACQ:STATE?"):
+                pass
+            # save all waveforms, then wait for the waveforms to be written
+            ymult = float(scope.ask('WFMPRE:YMULT?'))
+            yzero = float(scope.ask('WFMPRE:YZERO?'))
+            yoff = float(scope.ask('WFMPRE:YOFF?'))
+            xincr = float(scope.ask('WFMPRE:XINCR?'))
+            # getting data from oscilloscope
+            scope.write('CURVE?')
+            data = scope.read_raw()
 
-    #         headerlen = 2 + int(data[1])
-    #         header = data[:headerlen]
-    #         ADC_wave = data[headerlen:-1]
-    #         ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
-    #         volts = (ADC_wave - yoff)*ymult + yzero
-    #         time = np.arange(0, xincr*len(volts), xincr)
-    #         # for i in range(len(volts)):
-    #         #     volts_final.append(volts[i])
-    #         # for i in range(len(time)):
-    #         #     time[i] = float(time[i]) + 1.0 * (loop-1)
-    #         #     time_final.append(time[i])
-    #         while '1' in scope.ask("BUSY?"):
-    #             pass
-    # except KeyboardInterrupt:
-    #     return volts, time
+            headerlen = 2 + int(data[1])
+            header = data[:headerlen]
+            ADC_wave = data[headerlen:-1]
+            ADC_wave = np.array(unpack('%sB' % len(ADC_wave), ADC_wave))
+            volts = (ADC_wave - yoff)*ymult + yzero
+            time = np.arange(0, xincr*len(volts), xincr)
+
+            # for i in range(len(volts)):
+            #     volts_final.append(volts[i])
+            # for i in range(len(time)):
+            #     time[i] = float(time[i]) + 1.0 * (loop-1)
+            #     time_final.append(time[i])
+    except KeyboardInterrupt:
+        return volts, time
 
 
 def set_channel(scope, channel):
@@ -180,8 +181,6 @@ if __name__ == "__main__":
         csv_to_list = []
         time_to_decode = []
         can_h = []
-        data_voltage_low = []
-        sample_period = 100
         print "if " + colorama.Fore.RED + "red " + \
             colorama.Fore.WHITE + "color shows up,data is not correct"
         print "else " + colorama.Fore.GREEN + "green " + \
@@ -189,13 +188,17 @@ if __name__ == "__main__":
         """getting can frames, only from channel 1 (CAN_H),
         because channel 2 (CAN_L) is mirror of first channel"""
         data_final_can, time_can = main(instrument_id, "1")
+        plt.xlabel("time")
+        plt.ylabel("CAN_H")
+        plt.plot(time_can, data_final_can)
+        plt.show()
         for i in range(len(data_final_can)):  # Leveling voltage at 1.0 and 0 depending on raw voltage levels.
-            if data_final_can[i] > 2.5:
+            if data_final_can[i] > 3.0:
                 data_final_can[i] = 1
             else:
                 data_final_can[i] = 0
         plt.xlabel("time")
-        plt.ylabel("voltage_high")
+        plt.ylabel("CAN_H")
         plt.plot(time_can, data_final_can)
         plt.show()
         print "\n"
@@ -210,6 +213,7 @@ if __name__ == "__main__":
             can_h.append(float(csv_to_list_final[i][1]))
         inter_frame = []
         if_start = []  # interframe start
+        print can_h0
         for i in range(31*10):
             inter_frame.append(0.0)
         for s in KnuthMorrisPratt(can_h, inter_frame):
@@ -280,7 +284,7 @@ if __name__ == "__main__":
                 time.append(float(csv_to_list_final[i][0]))
                 voltage.append(float(csv_to_list_final[i][1]))
 
-            time_total += time
+            time_total += time 
             voltage_total += voltage
             index_start_lin = 0
             for i in range(len(voltage)):
@@ -347,8 +351,17 @@ if __name__ == "__main__":
         time_to_decode = []
         sda_to_decode = []
         scl_to_decode = []
-        sda_i2c, time_i2c, sample_period = main(instrument_id, "1")
-        scl_i2c, _, sample_period = main(instrument_id, "2")
+        sda_i2c, time_i2c = main(instrument_id, "1")
+        scl_i2c, _ = main(instrument_id, "2")
+        plt.subplot(2, 1, 1)
+        plt.xlabel("TIME")
+        plt.ylabel("SDA")
+        plt.plot(time_i2c, sda_i2c)
+        plt.subplot(2, 1, 2)
+        plt.xlabel("TIME")
+        plt.ylabel("SCL")
+        plt.plot(time_i2c, scl_i2c)
+        plt.show()
         sample_period = 5
         csv_everything_i2c(sda_i2c, scl_i2c, time_i2c)
         with open("csv\\i2c-capture.csv", "r") as csvCapture:
