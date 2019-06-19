@@ -16,9 +16,8 @@ def checksum(lin_data, lin_id, lin_version):
     @param lin_version -- Used version of LIN(2.0 or 1.0).
     ------------------------------------------------------------
     """
-
     data = [ord(c) for c in lin_data]
-    print "hex representation of string:",
+    print "data:",
     for i in data:
         print hex(i),
     print " "
@@ -31,11 +30,9 @@ def checksum(lin_data, lin_id, lin_version):
     else:
         for i in data:
             chcksum += i
-
     chcksum = 0xff & (~chcksum)
     print "checksum: " + hex(chcksum)
     id_string = str(bin(int(lin_id, 16))[2:].zfill(8))
-    print "id: " + id_string
     id = [ord(c) for c in id_string]
     p0 = id[0] ^ id[1] ^ id[2] ^ id[4]
     p1 = not(id[1] ^ id[3] ^ id[4] ^ id[5])
@@ -44,8 +41,13 @@ def checksum(lin_data, lin_id, lin_version):
     else:
         p1 = 0
     output = ""
+    
     print "parity: 0b" + str(p1) + str(p0)
+    id_string = "{0:0>2X}".format(
+                int("".join(map(str, id_string)), 2))
+    print "id: " + id_string
+
     for i in data:
         output += str(hex(i))[2:]
         output += " "
-    return (output + str(hex(chcksum))[2:])
+    return (id_string + " " + output + str(hex(chcksum))[2:])

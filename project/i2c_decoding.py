@@ -7,10 +7,10 @@ Used modules in i2c_decoding.py :
 --kmp from my script KnuthMorrisPratt(kmp.py)
 --colorama                           0.4.1
 """
-from collections import Counter
 from kmp import KnuthMorrisPratt
 from collections import OrderedDict
-import matplotlib.pyplot as plt
+import colorama
+colorama.init(autoreset=True)
 
 
 def pairwise(it):
@@ -50,12 +50,12 @@ def i2c_decoded(sda_to_decode, scl_to_decode, sample_period):
     match_sda = []
     match_scl = []
     match = []
-    print "clock" + str(start_decoding_i2c_clock)
-    for s in KnuthMorrisPratt(start_decoding_i2c_data, [1, 1, 1, 1, 1, 1]):
+    for s in KnuthMorrisPratt(start_decoding_i2c_data, [1, 1, 1, 1, 1]):
         match_sda.append(s)
     for s in KnuthMorrisPratt(start_decoding_i2c_clock, [1, 1, 1, 1, 1, 1, 1]):
-        match_scl.append(s)
+        match_scl.append(s+1)
     mapping = OrderedDict()
+
     for x in match_scl:
         mapping[x] = x if x in match_sda else 'Missing'
 
@@ -74,8 +74,9 @@ def i2c_decoded(sda_to_decode, scl_to_decode, sample_period):
         match.remove(to_delete[i])
     data_i2c = []
     for current_iter, next_iter in pairwise(match):
-        sof = start_decoding_i2c_data[current_iter+5:next_iter:2][1]
-        addr_i2c = start_decoding_i2c_data[current_iter+5:next_iter:2][2:9]
+        sof = start_decoding_i2c_data[current_iter+4:next_iter:2][1]
+        addr_i2c = start_decoding_i2c_data[current_iter+4:next_iter:2][2:9]
         data_i2c.append("{0:0>2X}".format(
-                int("".join(map(str, start_decoding_i2c_data[current_iter+5:next_iter:2][11:19])), 2)))
-    print data_i2c
+                int("".join(map(str, start_decoding_i2c_data[current_iter+4:next_iter:2][11:19])), 2)))
+
+    print "decoded i2c data: " +  colorama.Fore.GREEN + str(data_i2c)

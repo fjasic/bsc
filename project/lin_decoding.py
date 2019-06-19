@@ -44,16 +44,16 @@ def lin_decoded(voltage, sample_interval):
                 int("".join(map(str, decoded_lin[25:33][::-1])), 2))
     parity_bits = "{0:b}".format(
                 int("".join(map(str, decoded_lin[25:33][::-1])), 2))[0:2]
-    if id_field >= 0x00 and id_field < 0x1f:
+    length = 0
+    if int(id_field) >= 0 and int(id_field) < 31:
         length = 2
-    elif id_field >= 0x20 and id_field < 0x2f:
+    elif int(id_field) >= 32 and int(id_field) < 47:
         length = 4
     else:
         length = 8
-    length = length
     for x in range(length):
-            data_field.append("{0:0>2X}".format(
+        data_field.append("{0:0>2X}".format(
                 int("".join(map(str, decoded_lin[(35 + (x * 10)):(43 + (x * 10))][::-1])), 2)))
-    checksum = int(("{0:0>2X}".format(
-                int("".join(map(str, decoded_lin[(35 + (length * 10)):(43 + (length * 10))][::-1])), 2))))
+    checksum = "{0:0>2X}".format(
+                    int("".join(map(str, decoded_lin[(35 + (length * 10)):(43 + (length * 10))][::-1])), 2))
     return id_field, int(parity_bits), data_field, checksum
