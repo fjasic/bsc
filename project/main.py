@@ -287,13 +287,13 @@ if __name__ == "__main__":
         csv_to_list = []
         time_to_decode = []
         lin_voltage_to_decode = []
-        data_final_lin, time_lin, sample_period = main(
-            instrument_id, "1", 0.001, 5.0000, "LIN")
-        plt.xlabel("time")
-        plt.ylabel("LIN")
-        plt.plot(time_lin, data_final_lin)
-        plt.show()
-        csv_everything_lin(data_final_lin, time_lin)
+        # data_final_lin, time_lin, sample_period = main(
+        #     instrument_id, "1", 0.001, 5.0000, "LIN")
+        # plt.xlabel("time")
+        # plt.ylabel("LIN")
+        # plt.plot(time_lin, data_final_lin)
+        # plt.show()
+        # csv_everything_lin(data_final_lin, time_lin)
         with open("csv\\lin-capture.csv", "r") as csvCapture:
             reader = csv.reader(csvCapture)
             for row in reader:
@@ -312,15 +312,16 @@ if __name__ == "__main__":
             if lin_voltage_to_decode[i] == 0:
                 start_of_lin = i
                 break
-        plt.xlabel("time")
-        plt.ylabel("LIN")
-        plt.plot(time_lin[start_of_lin:], lin_voltage_to_decode[start_of_lin:])
-        plt.show()
+        # plt.xlabel("time")
+        # plt.ylabel("LIN")
+        # plt.plot(time_to_decode[start_of_lin:], lin_voltage_to_decode[start_of_lin:])
+        # plt.show()
         lin_id, lin_parity_bits, lin_data, lin_checksum = lin_decoded(
                 lin_voltage_to_decode[start_of_lin:], 50)
         output = "ID: " + str(lin_id) + "||PARITY BITS: " + \
             str(lin_parity_bits) + "||DATA: " + str(lin_data) + \
             "||CHECKSUM: " + str(lin_checksum)
+        print output
         checksum = 0
         lin_ver = sys.argv[2]
         data = [int(c, 16) for c in lin_data]
@@ -343,7 +344,6 @@ if __name__ == "__main__":
             sys.exit()
         print checksum
         checksum = 0xff & (~checksum)
-        print checksum
         final_checksum = int(str(hex(checksum))[2:])
         if lin_checksum == final_checksum and final_parity == lin_parity_bits:
             print colorama.Fore.GREEN + output
