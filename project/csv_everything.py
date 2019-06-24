@@ -14,7 +14,7 @@ import colorama
 colorama.init(autoreset=True)
 
 
-def csv_everything_spi(spi_data_to_csv, spi_clock_to_csv, time):
+def csv_everything_spi(time, spi_data_to_csv, spi_clock_to_csv):
 	"""
 	Outputing SPI data to csv.
 	--------------------------
@@ -30,7 +30,7 @@ def csv_everything_spi(spi_data_to_csv, spi_clock_to_csv, time):
 	print colorama.Fore.MAGENTA + "SPI - CSV output done"
 
 
-def csv_everything_i2c(i2c_data_to_csv, i2c_clock_to_csv, time):
+def csv_everything_i2c(time, i2c_data_to_csv, i2c_clock_to_csv):
     """
     Outputing I2C data to csv.
     --------------------------
@@ -46,7 +46,7 @@ def csv_everything_i2c(i2c_data_to_csv, i2c_clock_to_csv, time):
     print colorama.Fore.MAGENTA + "SPI - CSV output done"
 
 
-def csv_everything_can(can_data_to_csv, time):
+def csv_everything_can(time, can_data_to_csv):
     """
     Outputing CAN data to csv.
     --------------------------
@@ -61,7 +61,7 @@ def csv_everything_can(can_data_to_csv, time):
     print colorama.Fore.MAGENTA + "CAN - CSV output done"
 
 
-def csv_everything_lin(lin_data_to_csv, time):
+def csv_everything_lin(time, lin_data_to_csv):
     """
     Outputing LIN data to csv.
     --------------------------
