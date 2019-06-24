@@ -15,19 +15,19 @@ colorama.init(autoreset=True)
 
 
 def csv_everything_spi(spi_data_to_csv, spi_clock_to_csv, time):
-    """
-    Outputing SPI data to csv.
-    --------------------------
-    @param spi_data_to -- List of SPI data channel to be recored in csv.
-    @param spi_clock_to_csv -- List SPI clock channel to be recorded in csv.
-    @param time -- List of time in which interval SPI frame is recoreded.
-    --------------------------
-    """
-    with open("csv\\spi-capture.csv", "w") as csvCapture:
-        csvWriter = csv.writer(csvCapture)
-        for val in itertools.izip(time, spi_clock_to_csv, spi_data_to_csv):
-            csvWriter.writerow(val)
-    print colorama.Fore.MAGENTA + "SPI - CSV output done"
+	"""
+	Outputing SPI data to csv.
+	--------------------------
+	@param spi_data_to -- List of SPI data channel to be recored in csv.
+	@param spi_clock_to_csv -- List SPI clock channel to be recorded in csv.
+	@param time -- List of time in which interval SPI frame is recoreded.
+	--------------------------
+	"""
+	with open("csv\\spi-capture.csv", "w") as csvCapture:
+		csvWriter = csv.writer(csvCapture)
+		for val in itertools.izip(time, spi_clock_to_csv, spi_data_to_csv):
+				csvWriter.writerow(val)
+	print colorama.Fore.MAGENTA + "SPI - CSV output done"
 
 
 def csv_everything_i2c(i2c_data_to_csv, i2c_clock_to_csv, time):

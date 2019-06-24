@@ -3,12 +3,8 @@
 Generating I2C signal,10000 times.
 Used modules in sendSPI.py :
 --spidev                                3.4
---time
---datetime
 """
 import spidev
-import time
-import datetime
 
 outputFile = "data"
 

@@ -1,11 +1,11 @@
 # coding: utf-8
-import paramiko
 """
 Connects to Raspberry Pi and runs a scripts which sends I2C frames for measurment.
 
 Used in ssh_i2c.py :
 --paramiko                           2.4.2
 """
+import paramiko
 
 
 def Connect(server, port, user, password):

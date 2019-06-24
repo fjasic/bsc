@@ -17,7 +17,7 @@ def most_common(lst):
     return max(set(lst), key=lst.count)
 
 
-def lin_decoded(voltage, sample_interval):
+def lin_decoded(voltage, sample_interval, lin_version):
     """
     Decodes LIN signal from raw voltage and sample interval.
     -----------------------------------------
@@ -41,19 +41,25 @@ def lin_decoded(voltage, sample_interval):
     parity_bits = ""
     data_field = []
     id_field = "{0:0>2X}".format(
-                int("".join(map(str, decoded_lin[25:33][::-1])), 2))
+        int("".join(map(str, decoded_lin[25:33][::-1])), 2))
+    if lin_version == "-e":
+        pid = "{0:0>2X}".format(
+            int("".join(map(str, decoded_lin[25:31][::-1])), 2))
+    else:
+        pid = "{0:0>2X}".format(
+            int("".join(map(str, decoded_lin[25:29][::-1])), 2))
     parity_bits = "{0:b}".format(
-                int("".join(map(str, decoded_lin[25:33][::-1])), 2))[0:2]
+        int("".join(map(str, decoded_lin[25:33][::-1])), 2))[0:2]
     length = 0
-    if int(id_field) >= 0 and int(id_field) < 31:
+    if int(pid, 16) >= 0 and int(pid, 16) < 31:
         length = 2
-    elif int(id_field) >= 32 and int(id_field) < 47:
+    elif int(pid, 16) >= 32 and int(pid, 16) < 47:
         length = 4
     else:
         length = 8
     for x in range(length):
         data_field.append("{0:0>2X}".format(
-                int("".join(map(str, decoded_lin[(35 + (x * 10)):(43 + (x * 10))][::-1])), 2)))
+            int("".join(map(str, decoded_lin[(35 + (x * 10)):(43 + (x * 10))][::-1])), 2)))
     checksum = "{0:0>2X}".format(
-                    int("".join(map(str, decoded_lin[(35 + (length * 10)):(43 + (length * 10))][::-1])), 2))
+        int("".join(map(str, decoded_lin[(35 + (length * 10)):(43 + (length * 10))][::-1])), 2))
     return id_field, int(parity_bits), data_field, checksum

@@ -4,10 +4,8 @@ Generating I2C signal,10000 times.
 
 Used modules in sendI2C.py :
 --smbus
---time
 """
 import smbus
-import time
 
 bus = smbus.SMBus(1)
 
