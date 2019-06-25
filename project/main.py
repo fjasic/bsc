@@ -65,13 +65,12 @@ class Signal:
         plt.plot(clock_ch.time, clock_ch.voltage)
         plt.show()
 
-    def level_out_signal(self, leveling_value):
-        for i in range(len(self.voltage)):
-            if self.voltage[i] >= leveling_value:
-                self.voltage[i] = 1
+    def level_out_signal(self, signal, leveling_value):
+        for i in range(len(signal.voltage)):
+            if signal.voltage[i] >= leveling_value:
+                signal.voltage[i] = 1
             else:
-                self.voltage[i] = 0
-        return self.voltage
+                signal.voltage[i] = 0
 
 
 def main(instrument_id, channel_num, scale, ch_scale, protocol):
@@ -187,24 +186,18 @@ def recursion_frame_check(can_voltage, if_start, inter_frame, sample_rate, lengt
                 can_voltage[if_start[i]+length*sample_rate:if_start[i+1]+length*sample_rate], sample_rate)
 
 
-def lin_processing(time_to_decode, lin_voltage_to_decode, lin_ver):
-    for i in range(len(lin_voltage_to_decode)):
-        if lin_voltage_to_decode[i] <= 10.0:
-            lin_voltage_to_decode[i] = 0
-        else:
-            lin_voltage_to_decode[i] = 1
+def lin_processing(lin_signal, lin_ver):
+    Signal([], []).level_out_signal(lin_signal, 10.0)
     start_of_lin = 0
-    for i in range(len(lin_voltage_to_decode)):
-        if lin_voltage_to_decode[i] == 0:
+    for i in range(len(lin_signal.voltage)):
+        if lin_signal.voltage[i] == 0:
             start_of_lin = i
             break
-    # plt.xlabel("time")
-    # plt.ylabel("LIN")
-    # plt.plot(time_to_decode[start_of_lin:],
-    #          lin_voltage_to_decode[start_of_lin:])
-    # plt.show()
+    lin_signal.voltage = lin_signal.voltage[start_of_lin:]
+    lin_signal.time = lin_signal.time[start_of_lin:]
+    lin_signal.plotting_1_ch("TIME", "LIN")
     lin_id, lin_parity_bits, lin_data, lin_checksum = lin_decoded(
-        lin_voltage_to_decode[start_of_lin:], 50, lin_ver)
+        lin_signal.voltage, 50, lin_ver)
     output = "ID: " + str(lin_id) + "||PARITY BITS: " + \
         str(lin_parity_bits) + "||DATA: " + str(lin_data) + \
         "||CHECKSUM: " + str(lin_checksum)
@@ -257,39 +250,58 @@ if __name__ == "__main__":
     # SPI----------------------------------------------------
     if sys.argv[1] == "SPI":
         # ssh_call_spi()  # Generating SPI signal.
-        mode = sys.argv[2]
         csv_to_list = []
         time = []
         clock_voltage = []
         data_voltage = []
-        sample_period = 5  # Change sample period, look on osclilloscope.
-        with open("csv\\spi-capture.csv", "r") as csvCapture:
-            reader = csv.reader(csvCapture)
-            for row in reader:
-                csv_to_list.append(row)
-        for i in range(len(csv_to_list)-1):
-            time.append(float(csv_to_list[i][0]))
-            clock_voltage.append(float(csv_to_list[i][1]))
-            data_voltage.append(float(csv_to_list[i][2]))
-        # Leveling voltage at 1.0 and 0 depending on raw voltage levels.
-        # TODO implement leveling,change readout function
-        for i in range(len(time)):
-            if clock_voltage[i] > 3.0:
-                clock_voltage[i] = 1
-            else:
-                clock_voltage[i] = 0
-            if data_voltage[i] > 3.0:
-                data_voltage[i] = 1
-            else:
-                data_voltage[i] = 0
-        plt.subplot(2, 1, 1)
-        plt.plot(time, clock_voltage)
-        plt.subplot(2, 1, 2)
-        plt.plot(time, data_voltage)
-        plt.show()
-        # Decoding spi and returning decoded data.
-        data = spi_decoded(clock_voltage, data_voltage, sample_period)
-        print "data: " + str(data)
+        mode = sys.argv[2]
+        if mode == "online":
+            spi_volts_data_scope, spi_time_data_scope, scale_readout = main(
+                instrument_id, "1", 0.001, 1.0, "SPI")
+            spi_volts_clock_scope, _, scale_readout = main(
+                instrument_id, "2", 0.001, 1.0, "SPI")
+            spi_data_online = Signal(spi_time_data_scope, spi_volts_data_scope)
+            spi_clock_online = Signal(
+                spi_time_data_scope, spi_volts_clock_scope)
+            Signal([], []).level_out_signal(spi_data_online, 3.0)
+            Signal([], []).level_out_signal(spi_clock_online, 3.0)
+            csv_everything_spi(spi_data_online.time, spi_data_online.voltage, spi_clock_online.voltage)
+            Signal([], []).plotting_2_ch(spi_data_online,
+                                         spi_clock_online, "TIME", "MOSI", "TIME", "CLK")
+            with open("csv\\spi-capture.csv", "r") as csvCapture:
+                reader = csv.reader(csvCapture)
+                for row in reader:
+                    csv_to_list.append(row)
+            for i in range(len(csv_to_list)-1):
+                time.append(float(csv_to_list[i][0]))
+                clock_voltage.append(float(csv_to_list[i][1]))
+                data_voltage.append(float(csv_to_list[i][2]))
+            # Leveling voltage at 1.0 and 0 depending on raw voltage levels.
+            spi_clock_offline = Signal(time, clock_voltage)
+            spi_data_offline = Signal(time, data_voltage)
+            # Decoding spi and returning decoded data.
+            data = spi_decoded(spi_clock_offline.voltage,
+                               spi_data_offline.voltage, 33)
+            print "data: " + str(data)
+            
+        else:
+            with open("csv\\spi-capture.csv", "r") as csvCapture:
+                reader = csv.reader(csvCapture)
+                for row in reader:
+                    csv_to_list.append(row)
+            for i in range(len(csv_to_list)-1):
+                time.append(float(csv_to_list[i][0]))
+                clock_voltage.append(float(csv_to_list[i][1]))
+                data_voltage.append(float(csv_to_list[i][2]))
+            # Leveling voltage at 1.0 and 0 depending on raw voltage levels.
+            spi_clock_offline = Signal(time, clock_voltage)
+            spi_data_offline = Signal(time, data_voltage)
+            Signal([], []).plotting_2_ch(spi_data_offline,
+                                         spi_clock_offline, "TIME", "MOSI", "TIME", "CLK")
+            # Decoding spi and returning decoded data.
+            data = spi_decoded(spi_clock_offline.voltage,
+                               spi_data_offline.voltage, 33)
+            print "data: " + str(data)
     # END SPI------------------------------------------------
 
     # CAN----------------------------------------------------
@@ -309,13 +321,9 @@ if __name__ == "__main__":
             can_online_before_leveling = Signal(
                 time_can_scope, voltage_can_scope)
             can_online_before_leveling.plotting_1_ch("TIME", "CAN_H")
-            # Leveling voltage at 1.0 and 0 depending on raw voltage levels.
-            # TODO implement leveling
-            for i in range(len(voltage_can_scope)):
-                if voltage_can_scope[i] > 3.0:
-                    voltage_can_scope[i] = 1
-                else:
-                    voltage_can_scope[i] = 0
+            can_online = Signal(time_can_scope, voltage_can_scope)
+            # Leveling voltage at 1.0 and 0 depending on raw voltage levels
+            Signal([], []).level_out_signal(can_online, 3.0)
             can_online = Signal(time_can_scope, voltage_can_scope)
             can_online.plotting_1_ch("TIME", "CAN_H")
             csv_everything_can(can_online.time, can_online.voltage)
@@ -358,7 +366,7 @@ if __name__ == "__main__":
             lin_online = Signal(time_lin_scope, data_lin_scope)
             lin_online.plotting_1_ch("TIME", "LIN")
             csv_everything_lin(lin_online.time, lin_online.voltage)
-            lin_processing(lin_online.time, lin_online.voltage, lin_ver)
+            lin_processing(lin_online, lin_ver)
 
         else:
             csv_to_list = []
@@ -374,7 +382,7 @@ if __name__ == "__main__":
                 lin_voltage_csv.append(float(csv_to_list[i][1]))
             lin_offline = Signal(time_lin_csv, lin_voltage_csv)
             lin_offline.plotting_1_ch("TIME", "LIN")
-            lin_processing(lin_offline.time, lin_offline.voltage, lin_ver)
+            lin_processing(lin_offline, lin_ver)
     # END LIN------------------------------------------------
 
     # I2C----------------------------------------------------
@@ -382,29 +390,23 @@ if __name__ == "__main__":
         # ssh_call_i2c()  # Generating I2C signal.
         mode = sys.argv[2]
         if mode == "online":
-            sda_i2c, time_i2c, sample_period = main(
+            sda_i2c_scope, time_i2c_scope, sample_period = main(
                 instrument_id, "1", 0.001, 2.0, "I2C")
-            scl_i2c, _, sample_period = main(
+            scl_i2c_scope, _, sample_period = main(
                 instrument_id, "3", 0.001, 2.0, "I2C")
             sample_rate = int((1 / sample_period)/100)
-            i2c_clock_online = Signal(time_i2c, scl_i2c)
-            i2c_data_online = Signal(time_i2c, sda_i2c)
-            Signal().plotting_2_ch(i2c_data_online, i2c_clock_online, "SDA", "TIME", "SCL", "TIME")
+            i2c_clock_online = Signal(time_i2c_scope, scl_i2c_scope)
+            i2c_data_online = Signal(time_i2c_scope, sda_i2c_scope)
+            Signal([], []).plotting_2_ch(i2c_data_online,
+                                         i2c_clock_online, "SDA", "TIME", "SCL", "TIME")
             csv_everything_i2c(time, i2c_data_online.voltage,
                                i2c_clock_online.voltage)
-            for i in range(len(i2c_clock_online.voltage)):
-                if i2c_clock_online.voltage[i] >= 3.0:
-                    i2c_clock_online.voltage[i] = 1
-                else:
-                    i2c_clock_online.voltage[i] = 0
-
-            for i in range(len(i2c_data_online.voltage)):
-                if i2c_data_online.voltage[i] >= 3.0:
-                    i2c_data_online.voltage[i] = 1
-                else:
-                    i2c_data_online.voltage[i] = 0
-            Signal().plotting_2_ch(i2c_data_online, i2c_clock_online, "SDA", "TIME", "SCL", "TIME")
+            Signal([], []).level_out_signal(i2c_data_online, 3.0)
+            Signal([], []).level_out_signal(i2c_clock_online, 3.0)
+            Signal([], []).plotting_2_ch(i2c_data_online,
+                                         i2c_clock_online, "SDA", "TIME", "SCL", "TIME")
             i2c_decoded(i2c_data_online.voltage, i2c_clock_online.voltage, 100)
+            
         else:
             csv_to_list = []
             time_i2c_csv = []
@@ -414,20 +416,14 @@ if __name__ == "__main__":
                 reader = csv.reader(csvCapture)
                 for row in reader:
                     csv_to_list.append(row)
-            for i in range(len(csv_to_list)-1):
+            for i in range(len(csv_to_list)):
                 time_i2c_csv.append(float(csv_to_list[i][0]))
                 scl_i2c_csv.append(float(csv_to_list[i][1]))
                 sda_i2c_csv.append(float(csv_to_list[i][2]))
-            i2c_clock_offline = Signal(time_i2c_csv, sda_i2c_csv)
+            i2c_clock_offline = Signal(time_i2c_csv, scl_i2c_csv)
             i2c_data_offline = Signal(time_i2c_csv, sda_i2c_csv)
             Signal([], []).plotting_2_ch(i2c_data_offline,
                                          i2c_clock_offline, "SDA", "TIME", "SCL", "TIME")
-            # TODO finish this sheizen
-            i2c_clock_offline.level_out_signal(3.0)
-            print i2c_clock_offline.voltage
-            i2c_data_offline.level_out_signal(3.0)
-            print i2c_data_offline.voltage
-
             Signal([], []).plotting_2_ch(i2c_data_offline,
                                          i2c_clock_offline, "SDA", "TIME", "SCL", "TIME")
             i2c_decoded(i2c_data_offline.voltage,

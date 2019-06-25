@@ -6,8 +6,6 @@ Used modules in sendSPI.py :
 """
 import spidev
 
-outputFile = "data"
-
 spi = spidev.SpiDev()
 spi.open(0,0)
 spi.max_speed_hz=7629
