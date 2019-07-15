@@ -276,7 +276,7 @@ if __name__ == "__main__":
                 time.append(float(csv_to_list[i][0]))
                 clock_voltage.append(float(csv_to_list[i][1]))
                 data_voltage.append(float(csv_to_list[i][2]))
-            # Leveling voltage at 1.0 and 0 depending on raw voltage levels.
+            # Leveling voltage at 1.0 and 0 depending ]on raw voltage levels.
             spi_clock_offline = Signal(time, clock_voltage)
             spi_data_offline = Signal(time, data_voltage)
             # Decoding spi and returning decoded data.
