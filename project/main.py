@@ -15,8 +15,6 @@ Used modules in main.py :
 --os
 --csv                                1.0
 --colorama                           0.4.1
---time
---datetime
 """
 import visa
 import numpy as np
@@ -27,8 +25,6 @@ import warnings
 import os
 import csv
 import colorama
-import time as time_global
-import datetime
 from ssh_spi import ssh_call_spi
 from ssh_i2c import ssh_call_i2c
 from serial_can import serial_call_can
