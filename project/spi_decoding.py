@@ -38,5 +38,5 @@ def spi_decoded(voltage_clock, voltage_data, sample_interval):
     data_final = []
     for s in KnuthMorrisPratt(start_decoding_spi_data, [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]):
         data_final.append("{0:0>2X}".format(
-                int("".join(map(str, star_decodig_spi_data[s:s+16:2])), 2)))
+            int("".join(map(str, star_decodig_spi_data[s:s+16:2])), 2)))
     return data_final

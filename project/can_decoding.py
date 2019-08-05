@@ -65,7 +65,8 @@ def can_decoded(voltage_high, sample_interval):
         for i in range(length_can):
             data_can_hex.append("{0:0>2X}".format(
                 int("".join(map(str, start_decoding_voltage_high[19+i*8:19+i*8+8])), 2)))
-        crc_can = start_decoding_voltage_high[19 + 8*length_can:19+8*length_can+15]
+        crc_can = start_decoding_voltage_high[19 +
+                                              8*length_can:19+8*length_can+15]
         for_crc = start_decoding_voltage_high[:19+8*length_can]
         # Printing.
         print colorama.Fore.GREEN + "id(standard): " + \
@@ -128,7 +129,8 @@ def can_decoded(voltage_high, sample_interval):
         for i in range(length_can):
             data_can_hex.append("{0:0>2X}".format(
                 int("".join(map(str, start_decoding_voltage_high[39+i*8:39+i*8+8])), 2)))
-        crc_can = start_decoding_voltage_high[39 + 8*length_can:39+ 8*length_can+15]
+        crc_can = start_decoding_voltage_high[39 +
+                                              8*length_can:39 + 8*length_can+15]
         for_crc = start_decoding_voltage_high[:39+8*length_can]
         crc = []
         result_crc = []

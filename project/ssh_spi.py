@@ -7,6 +7,7 @@ Used in ssh_spi.py :
 """
 import paramiko
 
+
 def Connect(server, port, user, password):
     """
     Connects to device via SSH.

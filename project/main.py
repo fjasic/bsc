@@ -28,7 +28,7 @@ import colorama
 from ssh_spi import ssh_call_spi
 from ssh_i2c import ssh_call_i2c
 from serial_can import serial_call_can
-from serial_lin import serial_call_lin
+# from serial_lin import serial_call_lin
 from lin_decoding import lin_decoded
 from spi_decoding import spi_decoded
 from can_decoding import can_decoded
@@ -82,7 +82,11 @@ def main(instrument_id, channel_num, scale, ch_scale, protocol):
 
     volts_cumulative = []
     time_cumulative = []
-    scope = visa.ResourceManager().open_resource(instrument_id)
+    try:
+        scope = visa.ResourceManager().open_resource(instrument_id)
+    except AttributeError:
+        print "oscilloscope not connected!"
+        sys.exit()
     set_channel(scope, str(channel_num))
     scope.write("HORizontal:SCAle" + str(scale))
     scale_readout = float(scope.ask("HORizontal:SCAle?"))
@@ -183,6 +187,10 @@ def can_processing(can_voltage, if_start, inter_frame, sample_rate, length):
 
 
 def lin_processing(lin_signal, lin_ver):
+    print "if " + colorama.Fore.RED + "red " + \
+        colorama.Fore.WHITE + "color shows up,data is not correct"
+    print "else " + colorama.Fore.GREEN + "green " + \
+        colorama.Fore.WHITE + "it's all good!"
     Signal([], []).level_out_signal(lin_signal, 10.0)
     start_of_lin = 0
     for i in range(len(lin_signal.voltage)):
@@ -232,7 +240,12 @@ def lin_processing(lin_signal, lin_ver):
         print colorama.Fore.RED + output + \
             "[PARITY AND CHECKSUM ERROR]"
 
+
 def i2c_online_processing():
+    print "if " + colorama.Fore.RED + "red " + \
+        colorama.Fore.WHITE + "color shows up,data is not correct"
+    print "else " + colorama.Fore.GREEN + "green " + \
+        colorama.Fore.WHITE + "it's all good!"
     sda_i2c_scope, time_i2c_scope, sample_period = main(
         instrument_id, "1", 0.001, 2.0, "I2C")
     scl_i2c_scope, _, sample_period = main(
@@ -241,17 +254,23 @@ def i2c_online_processing():
     i2c_clock_online = Signal(time_i2c_scope, scl_i2c_scope)
     i2c_data_online = Signal(time_i2c_scope, sda_i2c_scope)
     Signal([], []).plotting_2_ch(i2c_data_online,
-                                    i2c_clock_online, "SDA", "TIME", "SCL", "TIME")
+                                 i2c_clock_online, "TIME", "SDA", "TIME", "SCL")
     csv_everything_i2c(time, i2c_data_online.voltage,
-                        i2c_clock_online.voltage)
+                       i2c_clock_online.voltage)
     Signal([], []).level_out_signal(i2c_data_online, 3.0)
     Signal([], []).level_out_signal(i2c_clock_online, 3.0)
     Signal([], []).plotting_2_ch(i2c_data_online,
-                                    i2c_clock_online, "SDA", "TIME", "SCL", "TIME")
-    i2c_decoded(i2c_data_online.voltage, i2c_clock_online.voltage, 100)
+                                 i2c_clock_online, "SDA", "SDA", "TIME", "TIME")
+    output = str(i2c_decoded(i2c_data_online.voltage,
+                             i2c_clock_online.voltage, 100))
+    print "decoded i2c data: " + colorama.Fore.GREEN + str(output)
 
 
 def i2c_offline_processing():
+    print "if " + colorama.Fore.RED + "red " + \
+        colorama.Fore.WHITE + "color shows up,data is not correct"
+    print "else " + colorama.Fore.GREEN + "green " + \
+        colorama.Fore.WHITE + "it's all good!"
     csv_to_list = []
     time_i2c_csv = []
     sda_i2c_csv = []
@@ -259,7 +278,8 @@ def i2c_offline_processing():
     with open("csv\\i2c-capture.csv", "r") as csvCapture:
         reader = csv.reader(csvCapture)
         for row in reader:
-            csv_to_list.append(row)
+            if row != []:
+                csv_to_list.append(row)
     for i in range(len(csv_to_list)):
         time_i2c_csv.append(float(csv_to_list[i][0]))
         scl_i2c_csv.append(float(csv_to_list[i][1]))
@@ -267,13 +287,21 @@ def i2c_offline_processing():
     i2c_clock_offline = Signal(time_i2c_csv, scl_i2c_csv)
     i2c_data_offline = Signal(time_i2c_csv, sda_i2c_csv)
     Signal([], []).plotting_2_ch(i2c_data_offline,
-                                    i2c_clock_offline, "SDA", "TIME", "SCL", "TIME")
+                                 i2c_clock_offline, "TIME", "SDA", "TIME", "SCL")
+    Signal([], []).level_out_signal(i2c_data_offline, 3.0)
+    Signal([], []).level_out_signal(i2c_clock_offline, 3.0)
     Signal([], []).plotting_2_ch(i2c_data_offline,
-                                    i2c_clock_offline, "SDA", "TIME", "SCL", "TIME")
-    i2c_decoded(i2c_data_offline.voltage,
-                i2c_clock_offline.voltage, 100)
+                                 i2c_clock_offline, "TIME", "SDA", "TIME", "SCL")
+    output = str(i2c_decoded(i2c_data_offline.voltage,
+                             i2c_clock_offline.voltage, 100))
+    print "decoded i2c data: " + colorama.Fore.GREEN + str(output)
+
 
 def spi_online_processing():
+    print "if " + colorama.Fore.RED + "red " + \
+        colorama.Fore.WHITE + "color shows up,data is not correct"
+    print "else " + colorama.Fore.GREEN + "green " + \
+        colorama.Fore.WHITE + "it's all good!"
     csv_to_list = []
     time = []
     clock_voltage = []
@@ -287,27 +315,20 @@ def spi_online_processing():
         spi_time_data_scope, spi_volts_clock_scope)
     Signal([], []).level_out_signal(spi_data_online, 3.0)
     Signal([], []).level_out_signal(spi_clock_online, 3.0)
-    csv_everything_spi(spi_data_online.time, spi_data_online.voltage, spi_clock_online.voltage)
+    csv_everything_spi(spi_data_online.time,
+                       spi_data_online.voltage, spi_clock_online.voltage)
     Signal([], []).plotting_2_ch(spi_data_online,
-                                    spi_clock_online, "TIME", "MOSI", "TIME", "CLK")
-    with open("csv\\spi-capture.csv", "r") as csvCapture:
-        reader = csv.reader(csvCapture)
-        for row in reader:
-            csv_to_list.append(row)
-    for i in range(len(csv_to_list)-1):
-        time.append(float(csv_to_list[i][0]))
-        clock_voltage.append(float(csv_to_list[i][1]))
-        data_voltage.append(float(csv_to_list[i][2]))
-    # Leveling voltage at 1.0 and 0 depending ]on raw voltage levels.
-    spi_clock_offline = Signal(time, clock_voltage)
-    spi_data_offline = Signal(time, data_voltage)
-    # Decoding spi and returning decoded data.
-    data = spi_decoded(spi_clock_offline.voltage,
-                        spi_data_offline.voltage, 33)
-    print "data: " + str(data)
+                                 spi_clock_online, "TIME", "MOSI", "TIME", "CLK")
+    data = spi_decoded(spi_clock_online.voltage,
+                       spi_data_online.voltage, 13)
+    print colorama.Fore.GREEN + "data: " + str(data)
 
 
 def spi_offline_processing():
+    print "if " + colorama.Fore.RED + "red " + \
+        colorama.Fore.WHITE + "color shows up,data is not correct"
+    print "else " + colorama.Fore.GREEN + "green " + \
+        colorama.Fore.WHITE + "it's all good!"
     csv_to_list = []
     time = []
     clock_voltage = []
@@ -315,8 +336,9 @@ def spi_offline_processing():
     with open("csv\\spi-capture.csv", "r") as csvCapture:
         reader = csv.reader(csvCapture)
         for row in reader:
-            csv_to_list.append(row)
-    for i in range(len(csv_to_list)-1):
+            if row != []:
+                csv_to_list.append(row)
+    for i in range(len(csv_to_list)):
         time.append(float(csv_to_list[i][0]))
         clock_voltage.append(float(csv_to_list[i][1]))
         data_voltage.append(float(csv_to_list[i][2]))
@@ -324,11 +346,15 @@ def spi_offline_processing():
     spi_clock_offline = Signal(time, clock_voltage)
     spi_data_offline = Signal(time, data_voltage)
     Signal([], []).plotting_2_ch(spi_data_offline,
-                                    spi_clock_offline, "TIME", "MOSI", "TIME", "CLK")
+                                 spi_clock_offline, "TIME", "MOSI", "TIME", "CLK")
+    Signal([], []).level_out_signal(spi_clock_offline, 3.0)
+    Signal([], []).level_out_signal(spi_data_offline, 3.0)
+    Signal([], []).plotting_2_ch(spi_data_offline,
+                                 spi_clock_offline, "TIME", "MOSI", "TIME", "CLK")
     # Decoding spi and returning decoded data.
     data = spi_decoded(spi_clock_offline.voltage,
-                        spi_data_offline.voltage, 33)
-    print "data: " + str(data)
+                       spi_data_offline.voltage, 13)
+    print colorama.Fore.GREEN + "data: " + str(data)
 
 
 if __name__ == "__main__":
@@ -382,7 +408,8 @@ if __name__ == "__main__":
             with open("csv\\can-capture.csv", "r") as csvCapture:
                 reader = csv.reader(csvCapture)
                 for row in reader:
-                    csv_to_list.append(row)
+                    if row != []:
+                        csv_to_list.append(row)
             csv_to_list_final = csv_to_list
             for i in range(len(csv_to_list_final)-1):
                 time_can_csv.append(float(csv_to_list_final[i][0]))
@@ -394,7 +421,7 @@ if __name__ == "__main__":
             if_start = []  # interframe start
             sample_rate = 25
             can_processing(can_offline.voltage, inter_frame,
-                                  if_start, sample_rate, 28)
+                           if_start, sample_rate, 28)
 
     # END CAN------------------------------------------------
 
@@ -421,7 +448,8 @@ if __name__ == "__main__":
             with open("csv\\lin-capture.csv", "r") as csvCapture:
                 reader = csv.reader(csvCapture)
                 for row in reader:
-                    csv_to_list.append(row)
+                    if row != []:
+                        csv_to_list.append(row)
             csv_to_list_final = csv_to_list
             for i in range(len(csv_to_list)):
                 time_lin_csv.append(float(csv_to_list[i][0]))

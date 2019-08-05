@@ -77,6 +77,5 @@ def i2c_decoded(sda_to_decode, scl_to_decode, sample_period):
         sof = start_decoding_i2c_data[current_iter+4:next_iter:2][1]
         addr_i2c = start_decoding_i2c_data[current_iter+4:next_iter:2][2:9]
         data_i2c.append("{0:0>2X}".format(
-                int("".join(map(str, start_decoding_i2c_data[current_iter+4:next_iter:2][11:19])), 2)))
-
-    print "decoded i2c data: " +  colorama.Fore.GREEN + str(data_i2c)
+            int("".join(map(str, start_decoding_i2c_data[current_iter+4:next_iter:2][11:19])), 2)))
+    return data_i2c
