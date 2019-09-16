@@ -1,0 +1,596 @@
+
+ 
+UNIVERZITET U NOVOM SADU
+FAKULTET TEHNIČKIH NAUKA U NOVOM SADU	 
+
+
+
+Filip Jašić
+
+
+
+Jedno rešenje alata za analizu automobilskih magistrala korišćenjem osciloskopa
+
+DIPLOMSKI RAD
+- Osnovne akademske studije -
+
+
+
+
+
+
+
+
+
+
+
+
+Novi Sad, septembar, 2019.
+
+Novi Sad, 2019
+
+ 
+
+Redni broj, RBR:	
+Identifikacioni broj, IBR:	
+Tip dokumentacije, TD:	Monografska dokumentacija
+Tip zapisa, TZ:	Tekstualni štampani materijal
+Vrsta rada, VR:	Završni (Bachelor) rad
+Autor, AU:	Filip Jašić
+Mentor, MN:	doc. dr Bogdan Pavković
+Naslov rada, NR:	
+Jezik publikacije, JP:	Srpski / ćirilica
+Jezik izvoda, JI:	Srpski
+Zemlja publikovanja, ZP:	Republika Srbija
+Uže geografsko područje, UGP:	Vojvodina
+Godina, GO:	2019.
+Izdavač, IZ:	Autorski reprint
+Mesto i adresa, MA:	Novi Sad; trg Dositeja Obradovića 6
+Fizički opis rada, FO:
+(poglavlja/strana/ citata/tabela/slika/grafika/priloga)	7/45/10/4/21/0/0
+Naučna oblast, NO:	Elektrotehnika i računarstvo
+Naučna disciplina, ND:	Računarska tehnika
+Predmetna odrednica/Ključne reči, PO:	
+UDK	
+Čuva se, ČU:	U biblioteci Fakulteta tehničkih nauka, Novi Sad
+Važna napomena, VN:	
+Izvod, IZ:	Zadatak ovog rada jeste snimanje, obrada i potom dekodovanje signala protokola koji se koriste u automobilskoj industriji – I2C, SPI, LIN i CAN, upotrebom osciloskopa. Pored pomenutog, potrebno je i automatizovati korišćenje osciloskopa.
+Dekodovanje protokola automatskim načinom uveliko olakšava dijagnostiku automobilskih mreža time što korisniku daje detaljan prikaz magistrala celokupnog sistema.
+Datum prihvatanja teme, DP:	
+Datum odbrane, DO:	
+Članovi komisije, KO:	Predsednik:		
+	Član:	 	Potpis mentora
+	Član, mentor:		
+ 
+
+Accession number, ANO:	
+Identification number, INO:	
+Document type, DT:	Monographic publication
+Type of record, TR:	Textual printed material
+Contents code, CC:	Bachelor Thesis
+Author, AU:	Filip Jašić
+Mentor, MN:	Bogdan Pavkovic, PhD
+Title, TI:	
+Language of text, LT:	Serbian
+Language of abstract, LA:	Serbian
+Country of publication, CP:	Republic of Serbia
+Locality of publication, LP:	Vojvodina
+Publication year, PY:	2019.
+Publisher, PB:	Author’s reprint
+Publication place, PP:	Novi Sad, Dositeja Obradovica sq. 6
+Physical description, PD:
+(chapters/pages/ref./tables/pictures/graphs/appendixes)	7/45/10/4/21/0/0
+Scientific field, SF:	Electrical Engineering
+Scientific discipline, SD:	Computer Engineering, Engineering of Computer Based Systems
+Subject/Key words, S/KW:	
+UC	
+Holding data, HD:	The Library of Faculty of Technical Sciences, Novi Sad, Serbia
+Note, N:	
+Abstract, AB:	The task of this thesis is to record, process and then decode signals of protocols used in the automotive industry - I2C, SPI, LIN and CAN, using an oscilloscope. In addition to this, it is necessary to automate the use of osciloscope.
+The decoding of the protocols automatically makes it easier to diagnose car networks by giving the user a detailed view of the system bus.
+
+Accepted by the Scientific Board on, ASB:	
+Defended on, DE:	
+Defended Board, DB:	President:		
+	Member:		Mentor’s sign
+	Member, Mentor:		
+ 
+Zahvalnost
+
+Zahvaljujem se porodici i prijateljima na pruženoj podršci tokom čitavog školovanja.
+Zahvaljujem se i mentoru doc. dr Bogdanu Pavkoviću, kao i Slobodanu Račanoviću i Jovici Kričkoviću na stručnoj pomoći i savetima tokom izrade ovog rada.
+
+ 
+SADRŽAJ
+
+
+1.	Uvod	1
+2.	Teorijske osnove	3
+2.1	I²C protokol	3
+2.1.1	Način funkcionisanja	3
+2.2	SPI protokol	4
+2.2.1	Prenos podataka, faza i polaritet	5
+2.3	LIN protokol	7
+2.3.1	Okvir	8
+2.4	CAN protokol	10
+2.4.1	Fizički sloj	11
+2.4.2	Električna svojstva, kablovi i utičnice	12
+2.4.3	Okviri poruke	12
+2.4.4	Arbitraža	15
+2.4.5	Ubacivanje bita, prepoznavanje grešaka, kontrolna suma	15
+3.	Koncept rešenja	17
+3.1	Osciloskop	17
+3.2	Povezivanje I2C-a i merenje sa osciloskopom	18
+3.3	Povezivanje SPI-a i merenje sa osciloskopom	20
+3.4	Povezivanje LIN-a i merenje sa osciloskopom	22
+3.5	Povezivanje CAN-a i merenje sa osciloskopom	24
+4.	Programsko rešenje	27
+4.1	Komunikacija sa osciloskopom, merenje i obrada signala	28
+4.2	Knuth-Morris-Pratt algoritam	29
+4.3	Dekodovanje I2C-a	30
+4.4	Dekodovanje SPI-a	31
+4.5	Dekodovanje LIN-a	32
+4.6	Dekodovanje CAN-a	34
+5.	Testiranje i rezultati	38
+6.	Zaključak	42
+7.	Literatura	43
+ 
+SPISAK SLIKA
+
+Slika 3.1 Raspberry Pi 2 model B, pregled pinova.	18
+Slika 3.2 Dijagram povezivanja I2C	19
+Slika 3.3 Prikaz ekrana osciloskopa prilikom snimanja I2C signala.	20
+Slika 3.4 Dijagram povezivanja SPI.	21
+Slika 3.5 Prikaz ekrana osciloskopa prilikom snimanja SPI signala.	21
+Slika 3.6 Dijagram povezivanja LIN-a.	22
+Slika 3.7 Prikaz ekrana osciloskopa prilikom snimanja LIN signala	23
+Slika 3.8 Dijagram povezivanja CAN.	25
+Slika 3.9 Prikaz ekrana osciloskopa prilikom snimanja CAN signala.	25
+Slika 4.1 Primer neobrađenog I2C signala.	31
+Slika 4.2 Primer neobrađenog SPI signala.	32
+Slika 4.3 Prikaz neobrađenog LIN signala.	33
+Slika 4.4 Prikaz Simulation Setup-a prozora unutar CANoe-a.	34
+Slika 4.5 Prikaz Canoe CANdb++ Editor-a.	35
+Slika 4.6 Prikaz I-Generator prozora.	36
+Slika 4.7 Prikaz uhvaćenog neobrađenog CAN signala sa osciloskopa	37
+Slika 5.1 Primer izlaza uspešnog dekodovanja I2C-a.	39
+Slika 5.2 Primer izlaza uspešnog dekodovanja SPI-a.	39
+Slika 5.3 Primer izlaza uspešnog dekodovanja LIN-a.	40
+Slika 5.4 Primer izlaza uspešnog dekodovanja CAN-a.	40
+Slika 5.5 Kašnjenje između CAN okvira.	40
+
+ 
+SPISAK TABELA
+
+Tabela 1 Razlike između CAN 2.0 A i CAN 2.0 B.	14
+Tabela 2 Opis žica glavne utičnice za Carberry modul.	23
+Tabela 3 Opis programskih modula.	27
+Tabela 4 Carberry komande za LIN.	32
+
+ 
+SKRAĆENICE
+
+API – Application programming interface, aplikativna sprega za programiranje
+ASIC – Application-specific integrated circuit, integrisano kolo specifične namene
+CAN – Controller Area Network, automobilska mreža za namenske upravljačke jedinice 
+CRC – Cyclic redundancy check, ciklična provera redudanse
+ECU – Electronic Control Unit, elektronska upravljačka jedinica
+I²C – Inter-Integrated Circuit, serijska komunikacija za integrisana kola
+ISO – International Organization for Standardization, Međunarodna organizacija za standardizaciju
+LIN – Local Interconnect Network, automobilska mreža za lokalno među-povezivanje
+LSB – Least Significant Bit, bit najmanje važnosti
+MSB – Most Significant Bit, bit najveće važnosti
+SPI – Serial Peripheral Interface, serijska periferna sprega
+UART – Universal asynchronous receiver-transmitter, univerzalni asinhroni prijemnik-predajnik
+USB – Universal Serial Bus, univerzalna serijska magistrala
+
+ 
+1.	Uvod
+
+Glavni pokretač razvoja mrežnih tehnologija u automobilima su bili napreci ostvareni u elektronskoj industriji, naročito u Sjedinjenim Američkim Državama. Zbog striktne kontrole štetnih gasova od strane zakona američke vlade, morao se napraviti mehanizam za veći stepen kontrole samog automobila. Ovo se postiglo ugrađivanjem računara koji ne samo da su poboljšali upravljanje emisijom štetnih gasova, već su povećali i performanse automobila, sigurnost, komfor, ali su i doprineli smanjenju troškova proizvodnje. Tokom godina se broj elektronskih modula u automobilu povećavao. Elektronska upravljačka jedinica (engl. ECU) predstavlja ugrađeni sistem koji upravlja jednim ili više elektronskih modula. U modernim vozilima može da se nađe i do 80 elektronskih upravljačkih jedinica. ECU dobija podatke od senzora koji se konvertuju u određenu jedinicu, gde se tako obrađeni podaci dalje šalju aktuatorima koji izvršavaju određene funkcije. Ponekad je potrebno da ovi moduli međusobno komuniciraju (npr. modul motora mora da obavesti modul menjača koja je trenutna brzina motora, koji opet mora dalje da obavesti ostale module kada se promeni stepen prenosa). Ovaj prenos podataka treba da bude brz i pouzdan. Kako se vremenom povećavao broj ovih komponenti, došlo je do velike kompleksnosti u ožičavanju pojedinih modula. Štaviše, ožičavanja modula automobila su se razlikovala od modela do modela, što je dodatno povećavalo troškove proizvodnje. Odgovor automobilske industrije na prethodno opisane probleme je bio da se stvori centralna mreža u vozilu. Ideja je bila da moduli budu samo „prikačeni“ na ove mreže kako bi mogli da lakše međusobno komuniciraju. Ovaj dizajn je bio lakši za proizvodnju, održavanje i dao je dodatnu fleksibilnost za nadograđivanje dodatnih modula bez promene celokupne arhitekture. Svaki modul, koji predstavlja čvor na automobilskoj mreži, kontroliše specifičnu komponentu i komunicira sa drugim modulima po potrebi korišćenjem standardnih protokola.
+Ciljevi automobilske mreže i njenih protokola su da:
+•	Smanje troškove proizvodnje.
+•	Imaju otpornost na eksterne smetnje.
+•	Zadrže funkcionalnost i u otežanim uslovima.
+•	Robusnost i pouzdanost.
+Iako su trenutni zahtevi automobilske mreže za brzinom smanjeni u odnosu na zahteve mreža nekih drugih sistema, zbog ubrzanog razvoja tehnologija i sve većih performansi automobila, postojaće i potreba za bržim magistralama.
+Jedan od zadataka ovog rada jeste implementacija dekodovanja signala protokola čija je upotreba česta u automobilskoj industriji, čime bi se olakšala analiza celokupnog sistema. Frekventnu primenu u dijagnostici automobilskih mreža ima osciloskop. Pošto svaki protokol ima svoje karakteristike koje ga razlikuju od ostalih protokola, kada se ručno radi dijagnostika osciloskopom, za svaki od protokola se osciloskop mora podesiti na odgovarajući način. Jedan od ciljeva ovog rada jeste i automatizacija podešavanja osciloskopa, a dekodovanjem signala protokola se dobija čitljiviji prikaz eventualnih grešaka ili problema na mreži, što dodatno ubrzava proces dijagnostike.
+Rad se sastoji iz pet celina:
+1. Teorijske osnove – opis protokola i osciloskopa koji se koristi za analizu i dekodovanje signala.
+2. Koncept rešenja – implementacija povezivanja protokola.
+3. Programsko rešenje – implementacija dekodovanja i analiziranja signala.
+4. Testiranje i rezultati – opis testiranja programskog rešenja.
+5. Zaključak – retrospektiva urađenog i analiza pravca za dalji razvoj programskog rešenja.
+
+ 
+2.	Teorijske osnove
+U ovom poglavlju su data objašnjenja protokola koji se koriste u automobilskoj industriji sa akcentom na način povezivanja i izgledom okvira svakog od signala protokola.
+
+2.1	I²C protokol
+I²C [1] je serijski komunikacioni protokol sa mogućnošću da ima više rukovodioca i više podređenih stvoren od Philips Semiconductor-a 1982. godine. Ima široku upotrebu za povezivanje sporih periferija za procesore i mikrokontrole na malim distancama. Od oktobra 2006, ne postoje troškovi licenciranja za upotrebu ovog protokola. SMBus je podskup ovog protokola, stvoren od strane Intel-a 1995. godine kao odgovor na potrebu za definisanijom, striktnijom upotrebom i ciljem da se doda robusnost i interoprebilnost.
+Moderni I2C sistemi podržavaju neka pravila iz SMBus-a, pri čemu je potreba za rekonfiguracijom mala. Originalno upotrebljavan u televizorima, sada podržava razne vrste periferija (namenski sistemi – EEPROM, Flash i RAM memorija, watchdog tajmeri, mikrokontroleri, personalni računari). I²C podržava više brzina komunikacije.
+2.1.1	Način funkcionisanja
+I²C koristi dve dvosmerne linije tipa otvoreni kolektor – SDA (serial data) i SCL (serial clock), u kombinaciji sa otpornikom za povlačenje. Implementacija preko otvorenog kolektora omogućava:
+•	Podršku za više uređaja.
+•	Jednostavno spajanje za različite napone.
+•	Ponašanje kao ožičeno logičko I.
+•	Podržava posredovanje i rešavanje sudara.
+Rukovodilac upravlja taktom (ne generiše ga), i inicira komunikaciju, dok podređeni uređaj prima takt i odgovara na prozivku rukovodioca, ali može da obori takt ukoliko mu je potrebno više vremena za odgovor. Uloge se mogu zameniti nakon stop sekvence. Svaki uređaj povezan na magistralu ima jedinstvenu adresu. Format adrese se sastoji od adresnog polja:
+•	Izvorno – 7 bita + 1 najniži bit u adresi za status upisa ili čitanja (1 označava čitanje, 0 upis).
+•	Prošireno – 10 bita. Vodeći oktet se sastoji iz petobitne kontrolne sekvence (11110), 2 gornja bita adrese i bit za status upisa ili čitanja (isti način funkcionisanja kao i za prethodni tip adrese). Niži oktet predstavlja 8 donjih bita adrese.
+Maksimalan broj uređaja na magistrali je ograničen brojem raspoloživih adresa i ukupnom kapacitivnošću magistrale (maksimalno 400 pF). Maksimalna dužina linije je nekoliko metara. Pošiljalac postavlja podatke na SDA liniju, a primalac ih potvrđuje. Rukovodilac započinje komunikaciju početnom sekvencom – postavlja SDA liniju na nisku ivicu dok je SCL linija na visokoj ivici. Redovne promene SDA se jedino dešavaju kada je SCL na niskoj ivici. Prenos podataka se završava stop sekvencom. Nakon start sekvence šalje se adresno polje, prozvani podređeni uređaj potvrđuje; nakon potvrde idu podaci koje takođe prati potvrda. Moguće je slanje više podataka istovremeno. Okvir izgleda isto prilikom slanja i čitanja, gde je statusni bit čitanja i pisanja jedina razlika.
+Takođe, moguć je i kombinovani prenos koji služi za promenu smera transakcije, gde rukovodioc umesto stop sekvence šalje produženi start, a zatim i novo adresno polje sa bitom za pisanje ili čitanje. Podešavanje bita podataka se vrši za vreme niskog nivoa takta, a uzorkovanje bita podataka se vrši za vreme visokog nivoa takta. Da bi se izbeglo lažno prepoznavanje podataka poželjno je raditi uzorkovanje i podešavanje na ivicu takta.
+
+2.2	SPI protokol
+SPI [2] je sinhrono, serijsko komunikaciono okruženje koje se koristi za komunikaciju na kratkim distancama, prvenstveno u ugrađenim sistemima. Ovaj protokol je osmišljen od strane Motorola-e sredinom 80-tih godina 20. veka. Neke od karakteristika ovog okruženja su:
+•	Jednostavnost povezivanja: sa 4 linije – SCLK (Serial Clock) – takt za usklađivanje prenosa; MOSI (Master Output Slave Input) – prenosi podatke od rukovodioca do podređenog; MISO (Master Input Slave Output) – prenosi podatke od podređenog do rukovodioca; SS (Slave Select) – posebna linija za odabir svakog podređenog, mogućnost postojanja jednog nadređenog i više podređenih uređaja. Nadređeni aktivira podređene niskim signalom. Obe, MISO i MOSI, linije su aktivne tokom svakog prenosa.
+•	Brže od UART-a: 250 kb/s do 2 Mb/s.
+•	Kratak domet: ~10 cm na svaki čvor.
+•	Mogućnost povezivanja procesora i širokog spektra podržanih periferija. Moguće je i povezivanje više zavisnih podređenih uređaja (jedan rukovodioc i više nanizanih podređenih – engl. Daisy chained).
+•	Grupe bita podataka (4, 8, 16); nepostojanje početnog i krajnjeg bita. Odvojene linije za prenos u oba smera (moguć dupleks, ali je potrebna podrška na čipu).
+•	Sinhronizacija – posebna linija za takt (neaktivna kad se postavi na 1 ili 0 na duži period). Nema potrebe za usklađivanjem takta.
+•	Čitanje na opadajuću ili rastuću ivicu.
+SPI poseduje četiri registra:
+•	SDPR (Transferred data read/write register) – smeštanje primopredajnih podataka.
+•	SPCR (Control Register) – smeštanje kontrolnih podešavanja.
+•	SPSR (Status Register) – smeštanje statusnih informacija.
+•	SPTCI (Transfer Complete Interrupt) – smeštanje prekidačke rutine za gotov prenos.
+2.2.1	 Prenos podataka, faza i polaritet
+Da bi započeo komunikaciju, rukovodilac magistrale prvo konfiguriše radni takt, koristeći frekvenciju podržanu od strane podređenog uređaja; uglavnom do par MHz. Rukovodilac potom bira podređeni uređaj sa logičkom 0 na SS liniji. Ako se zahteva period čekanja od strane podređenog, rukovodilac mora da čeka taj period pre nego što pošalje radni takt.
+Nakon svake periode radnog takta, dolazi do prenosa u oba smera – puni dupleks. Rukovodilac šalje bit na MOSI liniji i potom ga podređeni pročita, dok je na MISO liniji obrnuto. Ovaj proces se dešava čak i kada se podaci šalju u jednom smeru.
+Prenos uglavnom uključuje dva pomeračka registra, dužine podataka; jedan se nalazi kod rukovodioca, drugi kod podređenog. Podaci se šalju koristeći MSB organizaciju. Na ivicu takta oba uređaja pomeraju po 1 bit iz registra i šalju ga dalje svom odgovarajućem uređaju. Na sledećoj ivici takta, svaki od uređaja primi bit sa linije za prijem i taj bit se postavlja kao LSB pomeračkog registra. Nakon što su se svi biti pomerili i nakon što su poslati, dva uređaja su razmenili podatke. Kada se transmisija u potpunosti obavila, rukovodioc prestaje da generiše ivice takta. Ako treba da se pošalje još podataka, pomerački registri se opet ispočetka „napune“ podacima i prenos opet može da započne. Transmisija se uglavnom sastoji od 8 bita.
+Postoje četiri režima kao posledica kombinacija:
+•	Dva stanja faze takta (engl. CPHA).
+•	Dva stanja polariteta takta (engl. CKP/CPOL).
+Faza definiše značenje prednje i zadnje ivice takta; preslikavanje uzorkovanja i prelaza na novi bit nekoj od ivica. Različite ivice imaju različito značenje. Polaritet definiše vrednost aktivnog i stanja mirovanja – preslikavanje 0 i 1 na aktivnost i mirovanje (mirovanje kao početak i referenca na ivice).
+Kada je CPOL=0 mirovanje je 0 a aktiost 1:
+•	Za CPHA=0, uzorkovanje se vrši na uzlaznu ivicu (0→1), a prelaz na novi bit je na silaznu ivicu (1→0).
+•	Za CPHA=1, uzorkovanje se vrši na silaznu ivicu (1→0), a prelaz na novi bit je na uzlaznu ivicu (0→1).
+Kada je CPOL=1 mirovanje je 1 a aktivnost 0 (inverzija za CPOL=0):
+•	Za CPHA=0, uzorkovanje se vrši na silaznu ivicu (1→0), a prelaz na novi bit je na uzlaznu ivicu (0→1).
+•	Za CPHA=1, uzorkovanje se vrši na uzlaznu ivicu (0→1), a prelaz na novi bit je na silaznu ivicu (1→0).
+MOSI i MISO signali su uglavnom stabilni za pola ciklusa do sledećeg prelaza na novi bit. SPI rukovodioc i podređeni mogu da odabiraju signale na različitim odbircima u tom polu-ciklusu. Ovo daje dodatnu fleksibilnost komunikacionom kanalu između rukovodioca i podređenog uređaja.
+
+2.3	LIN protokol
+LIN [3] je serijski mrežni protokol, razvijen od strane LIN konzorcijuma (5 proizvođača automobila – BMW-a, Volkswagen Group-e, Audi Group-e, Volvo Cars-a, Mercedes-Benz-a; jednog dobavljača poluprovodnika – Motorola-e; i jednog dobavljača alata – VCT-a) osnovanog 1998. godine, dok je prva, u potpunosti implementirana verzija LIN specifikacije (LIN 1.3) objavljena 2002. godine.
+Najvažnije odlike LIN prokola su:
+•	Brzina do 20 kb/s na dužinama do 40 metara.
+•	Rukovodilac upravlja medijumom, zbog čega postoji garancija kašnjenja i nema sudara. Usklađivanje takta je odgovornost zavisnih uređaja .
+•	Varijabilnost u dužini poslatih podataka (8, 16 ili 64 bita).
+•	Fleksibilnost u konfiguraciji i dinamička topologija.
+•	Veličina mreže je uglavnom do 16 čvorova (moguće je i do 64, ali uz nizak protok). 
+•	Detekcija defektnih čvorova, detekcija greške i kontrolni zbir podataka.
+•	Operativni napon od 12 V.
+•	Lak za korišćenje, velika dostupnost komponenti, jeftiniji nego CAN i druge magistrale za komunikaciju, vozila su pouzdanija, produživanje magistrale je lako za implementaciju, ne postoje troškovi za licenciranje.
+Postoji više verzija LIN protokola, od kojih su u ovom radu dve relevantne nadalje – 1.3 i 2.0. Neka od unapređenja novije verzije su:
+•	Nizovi podataka su podržani tako da omogućavaju dužinu signala do 64 bita.
+•	Prošireni kontrolni zbir (koji uključuje i zaštićeni identifikator) je unapređenje u odnosu na klasični kontrolni zbir kod LIN 1.3.
+•	Sporadični okviri su definisani.
+•	Upravljanje mrežom je mereno u sekundama, ne u bitima.
+•	Upravljanje statusom je pojednostavljeno, a obaveštavanje mreže je standardizovano.
+LIN je mreža sa difuznim emitovanjem koja se sastoji od najčešće 16 mrežnih čvorova (jedan rukovodioc i do petnaest podređenih). Sve poruke su inicijalizovane od strane rukovodioca sa najviše jednim podređenim koji odgovara na trenutno poslatu poruku. Rukovodilac takođe može da se ponaša kao podređeni tako što odgovara na svoje poruke. Pošto je celokupna komunikacija inicijalizovana od strane rukovodioca, nije potrebna implementacija detekcije sudara. Uređaji povezani na LIN mrežu su uglavnom mikrokontroleri, ali mogu biti implementirani i u specijalizovanom hardveru ili ASIC-u u nameri da se dodatno smanje troškovi, površina ili potrebna struja. Fizički sloj se predstavlja kao kolo sa otvorenim kolektorom, magistrala je terminirana rukovodiocem (1000 Ω). Napon je između 7 V i 18 V na priključcima.
+2.3.1	Okvir
+Vreme koje je potrebno da se prenese LIN okvir na magistralu je suma svih vremena za koje je potrebno da se prenese svaki bit, vremena za odgovor i vremena između dva okvira. Vreme između 2 bita je period između kraja jednog bita i vremena početka narednog bita.
+Struktura okvira se sastoji od sledećih delova:
+•	Zaglavlje – unutar koga se nalazi:
+o	Polje za početak (engl. Break) se koristi za signalizaciju početka okvira. Ono se uvek generiše od strane glavnog, upravljačkog čvora (engl. master node) i mora da ima veličinu od bar 13 dominantnih  bita, uključujući početni bit i nakon njih, razmak za početak polja.
+o	Polje za sinhronizaciju (engl. Sync) uvek ima vrednost koja u heksadecimalnom formatu iznosi 55, da bi uređaji na mreži mogli da prepoznaju ovo polje.
+o	Zaštićeni identifikator (engl. Protected identifier) se sastoji od identifikatora i parnosti identifikatora. Vrednost od 0. do 5. bita označava identifikator dok vrednost od 6. do 7. bita predstavlja parnost identifikatora. Vrednosti identifikatora imaju i funkciju određivanja primene poslate LIN poruke pa tako:
+1.	Vrednosti od 0 do 59 (3b u heksadecimalnom obliku) se koriste za prenos podataka.
+2.	Vrednosti 60 (3c u heksadecimalnom obliku) i 61 (3d u heksadecimalnom obliku) se koriste za slanje dijagnostičkih podataka.
+3.	62 (3e u heksadecimalnom obliku) je rezervisano za upotrebe definisane od strane korisnika.
+4.	63 (3f u heksadecimalnom obliku) je rezervisano za buduća poboljšanja.
+Parnost bita se izračunava na sledeći način (pri čemu su vrednosti u jednačinama: ID – predstavlja indeks identifikatora, dok su P0 i P1 biti pariteta):
+P0 = ID0 ⊕ ID1 ⊕ ID2 ⊕ ID4
+P1 = ¬ (ID1 ⊕ ID3 ⊕ ID4 ⊕ ID5)
+•	Razmak za odgovor (engl. Response space).
+•	Polje za odgovor (engl. Response) – unutar koga se nalazi polje za podatke i polje za proveru kontrolnog zbira. Polje za podatke se sastoji od 8 do 64 bita. Nakon ovih polja za podatke dolazi polje za proveru kontrolnog zbira. Ono sadrži 8-bitnu invertovanu sumu sa prenosom za sve podatke unutar poruke (u slučaju LIN 1.3 se ono naziva klasično polje za proveru kontrolnog zbira, engl. classic checksum) ili invertovanu sumu sa prenosom za sve podatke i zaštićeni identifikator unutar poruke (poboljšano polje za proveru kontrolnog zbira, engl. enhanced checksum, koristi se u verziji LIN 2.0). Identifikatori sa vrednostima 60 i 63 će uvek koristiti klasičnu kontrolnu sumu. Vrste odgovora su:
+1.	Bezuslovni okvir (engl. Unconditional Frames) (identifikator 0-59) – tačno jedan definisani podređeni šalje odgovor, svaki zahtev se šalje u posebnom paketu. Potrebno je obezbediti dovoljno veliki paket za odgovor. Paket se uglavnom šalje tokom svakog ciklusa rasporeda. Moguće je slati više puta u toku istog ciklusa. Prijem odgovora je dostupan svim podređenima i rukovodiocu.
+2.	Dijagnostički okvir (engl. Diagnostic Frames) (identifikator 60-61). Moguće je slati segmentirano, odnosno više okvira zaredom bez zaglavlja. Postoje dve vrste dijagnostičkog okvira:
+•	Okvir zahteva (engl. Master Request Frame) (identifikator 60) – zaglavlje i odgovor šalje rukovodioc. Upotrebljava se kad je potreban zahtev za dijagnostikom ili podešavanjem.
+•	Okvir odgovora (engl. Slave Response Frame) (identifikator 61) – zaglavlje šalje nadređeni, a odgovor odgovarajući podređeni. Upotrebljava se kao odgovor na zahtev za dijagnostikom ili podešavanjem.
+3.	Vremenski dirigovan okvir (engl. Event triggered frame) (identifikator 0-59). Služi za grupisanje više povremenih bezuslovnih okvira. Ovim se dobija na uštedi u ciklusu – kratki odgovori koji ne zauzimaju raspored. Posledica ovoga je da dolazi do retkih pojava sudara, koji se dodatno izbegavaju dobrom arhitekturom mreže. Sudare rešava rukovodilac.
+4.	Sporadični okvir (engl. Sporadic frame) (identifikator 0-59). Logika ovog okvira je slična prethodno opisanom okviru.
+5.	Ostali okviri (engl. Other frames) (identifikator 62-63).
+•	Razmak između okvira.
+Svaki okvir čije se slanje planira, alocira određeni vremenski interval na magistrali. Trajanje ovog vremenskog intervala mora biti dovoljno dugačko da omogući prenos okvira čak i u najgorem mogućem slučaju (npr. zbog lošeg kvaliteta podređenih komponenti se stvaraju kašnjenja). Nominalna vrednost za prenos okvira je jednaka broju poslatih podataka u bitima. Računanje ovog vremenskog intervala se vrši na sledeći način:
+Tnominalno_vreme_zaglavlja = 34 * Tbit
+Tnominalno_vreme_odgovora = 10 * (BBP + 1) * Tbit
+Tnominalno_vreme_okvira = Tnominalno_vreme_zaglavlja + Tnominalno_vreme_odgovora
+Tbit = 1 / brzina takta
+BBP predstavlja broj bajta podataka (1 bajt je ovde 8 bita). Tbit predstavlja vreme potrebno za prenos jednog bita. Maksimalno vreme trajanja okvira je još 40% veće u odnosu na Tnominalno_vreme_okvira.
+
+2.4	CAN protokol 
+CAN [4] protokol je najzastupljeniji protokol koji se koristi u automobilskoj industriji. Razvijen od strane Robert Bosch GmbH-a 1983. godine, dok je zvanično pušten u upotrebu 1986. godine na Society of Automotive Engineers (SAE) konferenciji u Detroitu.
+Verzija specifikacije se sastoji iz dva dela: 
+•	A (pokriven ISO 11519 standardom) – ovaj deo specifikacije opisuje standardni format sa 11-bitnim identifikatorom. Mreža gde uređaj koristi ovakav standardni identifikator često uzima naziv CAN 2.0 A, korišćen nadalje u radu.
+•	B (pokriven ISO 11898 standardom) – ovaj deo specifikacije opisuje prošireni format sa 29-bitnim identifikatorom. Mreža gde uređaj koristi ovaj produženi identifikator se često naziva i CAN 2.0 V – naziv korišćen nadalje u radu.
+Neke od karakteristika CAN protokola su:
+•	Brza, serijska, zajednička magistrala (brzine do 1Mbps) za više uređaja (do 32 uređaja po ISO 11898; slobodan pristup – bilo ko može da pristupa kada medijum nije zauzet), korišćenje upredene parice (domet do 40m).
+•	Asinhrona komunikacija (okidanje na događaje).
+•	Veličina okvira podataka: 0-64 bita.
+•	Filtriranje na prijemu, prepoznavanje greške (korišćenjem ciklične provere redudanse), mere za ograničavanje grešaka.
+•	Odziv u realnom vremenu.
+•	Veća kašnjenja za poruke niskog prioriteta, mala kašnjenja za poruke visokog prioriteta.
+2.4.1	Fizički sloj 
+CAN mreža poseduje mogućnost da ima više vlasnika (engl. masters). Sve elektronske upravljačke jedinice se međusobno povezuju na magistralu sa dve linije (jedna se zove CAN-H, druga CAN-L). Ove dve linije čine upredenu paricu (oklopljena ili neoklopljena) i potrebno ih je omeđiti otpornikom sa nominalnom karakterističnom impedancom od 120 Ω u slučaju brze CAN mreže, dok u slučaju spore CAN mreže se koristi otpornik od bar 100 Ω (otpornost se zasebno izračunava).
+Logička stanja se procenjuju na osnovu razlike napona:
+•	Za brzu CAN magistralu (ISO 11898-2) [5]:
+o	Recesivni bit  predstavlja razliku od 0 V (u teoriji) između CAN-H i CAN-L linije; u praksi se ta razlika kreće od 0.5 V. Napon na CAN-H žici se kreće ka 5 V, dok se na CAN-L žici kreće ka 0 V.
+o	Dominantni bit predstavlja razliku od oko 2 V (mora bitu u rasponu između 1.5 V i 3.5 V) između CAN-H i CAN-L linije. Napon na CAN-H žici se kreće ka 5 V dok napon na CAN-L žici se kreće ka 0 V.
+•	Za sporu CAN magistralu (ISO 11898-3):
+o	Recesivni bit predstavlja razliku od bar 0.6 V između CAN-H i CAN-L linije. Napon na CAN-H žici se kreće ka 0 V, dok napon na žici CAN-L ide ka 5 V.
+o	Dominantni bit predstavlja razliku od bar 2.3 V između CAN-H i CAN-L linije. Napon na CAN-H žici se kreće ka 5 V, dok napon linije CAN-L ide ka 0 V.
+Razlike u ograđivanju brze i spore CAN magistrale su sledeće:
+•	Za brzu CAN magistralu je potrebno da se oba kraja dve linije (CAN-H i CAN-L) ograde, dok je sredina slobodna. 
+•	Za sporu CAN magistralu nema potrebe za ograđivanjem krajeva linije. Ograđuju se uređaji i svaka linija posebno: RTH-CAN-H i RTH-CAN-L.
+2.4.2	Električna svojstva, kablovi i utičnice
+Brzina tranzicije je veća kada se desi promena iz recesivnog u dominantni bit, bez obzira da li je u pitanju brza ili spora CAN mreža. Brzina tranzicije iz dominantnog u recesivni bit zavisi od dužine same CAN mreže i kapacitivnosti korišćene linije. Specifikacije zahtevaju da magistrala bude unutar minimalnog i maksimalnog zajedničkog napona, ali ne definišu same vrednosti tih granica.
+Najčešće se za kablove koriste oklopljene upredene parice. Koristi se jedan kabel, osim u slučaju kada postoji potreba za dodatnim napajanjem. Sam CAN ne određuje vrstu fizičkog medijuma, međutim, tipično se koriste 9-pinske D-sub, i 5-pinske mini style utičnice.
+2.4.3	Okviri poruke
+Prenos poruka je kontrolisan sa četiri tipa okvira:
+•	Okvir za podatke (engl. Data frame) – nosi podatke od predajnika do prijemnika. Okvir za podatke se sastoji od sedam polja (razlike između CAN 2.0 A i CAN 2.0 B su po potrebi posebno navedeni, dok se podrazumeva da ostala polja imaju istu strukturu – tabela 1):
+o	Početak okvira (engl. Start of frame) označava početak polja za okvir za podatke ili okvira za daljinsko upravljanje. Sastoji se od jednog dominantnog bita. Uređaj na magistrali može da počne da šalje kada je magistrala u mirnom režimu rada (engl. Bus Idle). Svi uređaji moraju da se sinhronizuju sa vodećom ivicom koja je prouzrokovana od strane ovog polja od uređaja koji je prvi započeo prenos.
+o	Polje za arbitražu (engl. Arbitration field). Za ovo polje postoje razlike između CAN 2.0 A i CAN 2.0 B:
+	Ovo polje se sastoji od identifikatora i RTR bita u slučaju CAN 2.0 A, pri čemu identifikator se sastoji od 11 bita; ovi biti se gledaju u MSB redosledu pri čemu svih 7 najznačajnih bita (od ID-10 do ID-4) ne smeju biti recesivni. RTR bit mora da bude dominantan kada se šalje okvir za podatke, inače, kada se šalje okvir za daljinsko upravljanje ovaj je bit recesivan.
+	U slučaju CAN 2.0 B identifikator se sastoji od 29 bita, podeljenih na dva dela: identifikator A (11 bita) i identifikator B (18 bita). Između ova dva dela produženog identifikatora se nalazi SRR bit (1 recesivan bit) i IDE bit (1 recesivan bit).
+o	Kontrolno polje (engl. Control field). Za ovo polje takođe postoje razlike između dve vrste protokola:
+•	Kod bržeg tipa protokola, kontrolno polje se sastoji od 6 bita. Ono uključuje 4 bita koji označavaju dužinu poslatih podataka (engl. Data length code) u bajtima, i 2 bita koji su rezervisani za buduća proširenja protokola – IDE bit (mora biti dominantan) i rezervisani r0 bit (može biti ili dominantan ili recesivan).
+•	Kod sporijeg tipa protokola ovo polje se takođe sastoji od 6 bita, pri čemu prva 2 bita su rezervisani biti – r0, r1 (mogu biti ili dominanti ili recesivni). Nakon njih u okviru se nalaze 14 bita koji označavaju dužinu poslatih podataka.
+o	Polje za podatke (engl. Data field) se sastoji od 0 do 64 bita. Podaci se šalju u MSB redosledu.
+o	Polje za cikličnu proveru redudanse (engl. CRC field) se sastoji od 15 bita koji predstavljaju izračunatu cikličnu proveru redudanse i delimitera koji zauzima 1 bit, pri čemu je taj bit recesivan.
+o	Polje za potvrdu o prijemu (engl. ACK field) se sastoji od ACK vremenskog intervala (engl. slot) i ACK delimitera gde svaki od polja zauzima po 1 bit i pri čemu pošiljaoc postavlja recesivni bit u ACK vremenskom intervalu, dok primaoc poruke može da naredi slanje dominantnog bita. ACK delimiter „razdvaja“ ovo polje sa krajem okvira i ono sadrži 1 recesivan bit.
+o	Kraj okvira (End of frame) se sastoji od 7 recesivnih bita.
+•	Okvir za daljinsko upravljanje (engl. Remote frame) se šalje na magistralu kao zahtev za okvirom za podatke sa određenim identifikatorom.
+•	Okvir za greške (engl. Error frame) se šalje od bilo kog čvora uređaja koji detektuje grešku na magistrali.
+•	Okvir za preklapanje (engl. Overload frame) se koristi da omogući kašnjenje između dva poslata okvira za podatke ili okvira za greške.
+CAN 2.0 A (11-bitni identifikator)
+CAN 2.0 B (29-bitni identifikator)
+Naziv polja	Dužina polja	Naziv polja	Dužina polja
+Početak okvira	1 bit	Početak okvira	1 bit
+Identifikator	11 bita	Identifikator A	11 bita
+RTR	1 bit 	SRR	1 bit
+IDE	1 bita	IDE	1 bit
+Rezervisan bit	1 bita	Identifikator B	18 bita
+DLC	4 bita	RTR	1 bit
+Podaci	0-64 bita	Rezervisani biti	2 bita
+CRC	15 bita	DLC	4 bita
+CRC delimiter	1 bit	Podaci	0-64 bita
+ACK	1 bit	CRC	15 bita
+ACK delimiter	1 bit	CRC delimiter	1 bit
+EOF	1 bit	ACK	1 bit
+		ACK delimiter	1 bit
+		EOF	1 bit
+Tabela 1 Razlike između CAN 2.0 A i CAN 2.0 B.
+2.4.4	Arbitraža
+Kada god je magistrala slobodna, bilo koja elektronska upravljačka jedinica može da počne sa slanjem poruke. U slučaju da dve ili više upravljačkih jedinica počne sa slanjem poruka u isto vreme nastaje konflikt koji se rešava mehanizmom arbitraže za pojedinačne bite korišćenjem identifikatora. Ovaj mehanizam obezbeđuje da se ne gubi na vremenu, a takođe sprečava gubitak podataka. Ako okvir za prenos podataka i okvir za daljinsko upravljanje imaju isti identifikator i ako su inicijalizovani u isto vreme, prednost ima okvir za slanje podataka. 
+Tokom arbitraže, svaki pošiljalac proverava na kom nivou se nalazi bit identifikatora koji je on poslao poredeći ga naspram nivoa bita identifikatora koji se nalazi na magistrali. Ako su ovi biti na istim nivoima jednaki, pošiljalac može da nastavi sa slanjem. Kada je recesivni bit na istom nivou poslat i dominantni bit na istom nivou se nalazi na magistrali, tada je pošiljalac „izgubio“ arbitražu i mora da se povuče, pri čemu se prekida prenos preostalih bita u okviru. Drugim rečima, pobeđuju uređaji sa najmanjim identifikatorom. Identifikator se šalje u MSB formatu, da bi se brže uočila arbitraža i da bi medijum bio efikasniji za slanje.
+2.4.5	Ubacivanje bita, prepoznavanje grešaka, kontrolna suma
+Ubacivanje bita se vrši na sledeći način: nakon 5 identičnih bita se ubacuje suprotan bit; ovo poboljšava usklađivanje, a dodatni biti ne menjaju podatke pošto je ubacivanje urađeno hardverski. Ova tehnika generalno nije potrebna, pošto se vrlo retko pojavljuju istovetne vrednosti na magistrali. Problem sa ubacivanjem bita je pojava takozvanih „lavinskih“ bitova (npr. 5 recesivnih bita koje prati 5 dominantnih bita) koji mogu da zbune mehanizam za prepoznavanje ubačenih bita.
+Statistička učestanost grešaka CAN protokola zavisi od ukupnog broja uređaja, fizičkog ožičenja i rasporeda, kao i spoljašnjih elektromagnetnih smetnji. Tok prepoznavanja grešaka između pošiljaoca i primaoca je nezavisan od filtriranja i maskiranja na prijemu i sastoji se iz pet zasebnih mehanizama:
+1.	Nadgledanje pojedinačnih bita – prepoznavanje lokalnih i globalnih grešaka kod pošiljaoca; upoređuje se stanje na magistrali sa poslatim bitom; ne primenjuje se na polje za arbitražu.
+2.	Provera strukture – tipična polja su CRC delimiter, ACK delimiter i EOF i čine ih uvek recesivni biti.
+3.	Provera kodovanja (umetanje bita) – prijemnik proverava tok bita, na svakih 5 uzastopnih istovetnih bita mora da dođe ubačena promena; uključuje sve bite od SOF do kraja CRC.
+4.	Provera potvrde je obaveza pošiljaoca – potrebno je bar da pristigne jedna potvrda pa da pošiljalac podesi recesivni bit; takođe, potrebno je da prijem obori sa dominantnim.
+5.	Ciklična provera redudanse – pošiljalac proračunava pre slanja, prijemnik proverava podudaranje pri prijemu. Ciklična provera redudanse se računa na sledeći način: polinom, čiji su koeficijenti predstavljeni kombinacijom vrednosti prethodnih polja (polje za početak okvira, polje za arbitražu, kontrolno polje, polje za podatke), pri čemu je prethodno urađeno izbacivanje ubačenih bita, a koeficijenti 15 najnižih bita čine nule. Ovaj polinom se potom deli (koeficijenti su izračunati modulom dvojke) sa generator-polinomom:
+x15 + x14 + x10 + x8 + x7 + x4 + x3 + 1
+Ostatak ovog deljenja predstavlja 15-bitnu vrednost CRC sekvence koja se šalje na magistralu kao dodatak originalne poruke. Da bi se primenila ova funkcija, 15-bitni pomerački registar CRC_RG(14:0) se koristi. NXTBIT označava sledeći bit u nizu. Pseudo-kod ove funkcije se opisuje sa:
+CRC_RG = 0;
+REPEAT
+CRCNXT = NXTBIT EXOR CRC_RG(14);
+CRC_RG(14 :1) = CRC_RG(13 :0);
+CRC_RG(0) = 0;
+IF CRCNXT THEN
+CRC_RG(14 :0) = CRC_RG(14 :0) EXOR (4599hex);
+ENDIF
+UNTIL (CRC SEQUENCE starts or there is an ERROR condition)
+Nakon slanja/prijema poslednjeg bita polja za podatke, CRC_RG sadrži CRC sekvencu.
+
+ 
+3.	Koncept rešenja
+3.1	Osciloskop
+Osciloskop je merni uređaj koji se koristi za grafički prikaz napona kao funkcije vremena jednog ili više signala u obliku dvodimenzionalnog dijagrama. Može imati jedan ili više kanala za prikupljanje signala. Na ulaz za svaki od kanala je povezana sonda. Postoji više vrsta osciloskopa, ali ih sve karakteriše podešavanje horizontalne skale (vremenske baze – deo vremena po horizontalnom podeoku – izraženo u sekundama, milisekundima ili mikrosekundama) i vertikalne skale (naponske rezolucije – veličina napona po vertikalnom podeoku – izraženo u V ili mV). Svi osciloskopi imaju i podešavanje okidača koji služi za sinhronizaciju. Pošto se u elektronici javljaju različiti signali, sinhronizacija može da bude veoma kompleksna. Potenciometrom LEVEL se podešava naponski nivo ulaznog signala na kome će se „okinuti“ kolo za sinhronizaciju. Izborom načina povezivanja signala na kolo za sinhronizaciju (AC – bez jednosmerne komponente, DC – direktno spregnut signal, HF – preko visokofrekventnog filtera, LF – preko niskofrekventnog filtera) se može omogućiti kvalitetnija sinhronizacija. Pomeranjem ovog potenciometra može se izabrati naponski nivo pri kome je prikaz signala na ekranu stabilan. Ako signal nije stabilan, doći će do variranja sinhronizacije i do „drhtanja“ signala na ekranu.
+Prilikom izrade ovog rada korišćen je Tektronix DPO 4104B osciloskop. Ovaj osciloskop ima četiri nezavisna kanala. Sondama su mereni naponski nivoi koji su određeni signali protokola imali, čije su linije prethodno povezane na prototipsku ploču. U ovom radu je korišćen jedan ili dva kanala u zavisnosti od protokola koji se koristi (jedino LIN protokol koristi jedan kanal, ostali protokoli koriste po dva kanala). Okidači su potom podešeni za nivoe izmerenog napona, horizontalnu i vertikalnu skalu. Na samom početku ovo podešavanje je bilo ručno, praćenjem uputstva za upotrebu ovog osciloskopa [6], potom automatski – komunikacijom preko USB-a upotrebom API-ja.
+
+3.2	Povezivanje I2C-a i merenje sa osciloskopom
+Na tržištu se početkom 2012. godine pojavio računar Raspberry Pi koji zadovoljava sve kriterijume računara fon Nojmanovog tipa. Poseduje čip BCM2835 sa ARM11 procesorom i RAM memoriju, kao i mogućnost povezivanja sa ostalim pomoćnim komponentama, čak i onim nestandardnim preko GPIO porta. Ono što ga čini interesantnim je da je u pitanju računar opšte namene pristupačan po ceni, malih dimenzija, sa mogućnošću priključivanja nestandardne opreme.
+Raspberry Pi 2 model B predstavlja drugu generaciju platforme koja se pojavila u februaru 2015. Novi model je doneo i značajno poboljšanje performansi. Raspberry Pi 2 je čak 6 puta brži od svog prethodnika. Novi Raspberry Pi 2 Model B je istog formata kao prethodni Raspberry Pi model B+ ali sa duplo više RAM memorije i znatno bržim procesorom.
+Pregled pinova Raspberry Pi 2 model B računara se dobija kucanjem komande gpio readall u terminalu (slika 3.1).
+ 
+Slika 3.1 Raspberry Pi 2 model B, pregled pinova.
+Povezivanje I2C se vrši pregledom pinova – 1 (DC Power), 3 (SDA), 5 (SCL) i 30 (Ground). Zbog toga što ovaj protokol na Raspberry Pi-u zahteva uređaj povezan na ove pinove za uspešnu detekciju saobraćaja na mreži, koristio se ADXL345 senzor za akcelerometar proizveden od strane Sunfouder kompanije.
+ 
+Slika 3.2 Dijagram povezivanja I2C
+Potom, korišćenjem dve sonde vršeno je očitavanje signala, pri čemu je namena sonde na kanalu 1 osciloskopa bila da prikupi signal sa podacima (SDA), a sonde na drugom kanalu da prikupi signal sa radnim taktom (SCL). Na dijagramu (slika 3.2) povezivanja sondi osciloskopa sa žicama koje su povezane između Raspberry Pi-a i ADXL345 može da se vidi i kako se povezuje računar sa osciloskopom i Raspberry Pi-em (oni komuniciraju upotrebom SSH). Okidač za svaki od kanala je podešen na 3 V, horizontalna skala je podešena na 200 ms, vertikalna na 1 V. Nakon ovog podešavanja se mogao videti signal I2C protokola (slika 3.3 – žutom bojom je označen signal koji prenosi podatke, a plavom bojom signal koji prenosi takt).
+ 
+Slika 3.3 Prikaz ekrana osciloskopa prilikom snimanja I2C signala.
+
+3.3	Povezivanje SPI-a i merenje sa osciloskopom
+Povezivanje SPI na prototipsku ploču se vrši praćenjem pinova za GPIO interfejs Raspberry Pi računara, pri čemu su korišćeni samo pinovi GPIO 9 (SPI_MOSI), GPIO 10 (SPI_MISO) i 11 (SPI_CLK). Jedan Raspberry Pi treba da se ponaša kao nadređeni, dok je drugi podređeni.
+Međusobno na prototipsku ploču je povezana SPI_MOSI linija nadređenog uređaja sa SPI_MISO linijom podređenog uređaja i SPI_CLK linija jednog uređaja sa SPI_CLK linijom drugog uređaja.
+ 
+Slika 3.4 Dijagram povezivanja SPI.
+Na dijagramu (slika 3.4) povezivanja sondi osciloskopa sa žicama koje su povezane između nadređenog i podređenog Raspberry Pi-a može da se vidi i kako se povezuje računar sa osciloskopom i Raspberry Pi-om.
+ 
+Slika 3.5 Prikaz ekrana osciloskopa prilikom snimanja SPI signala.
+Upotrebom SSH protokola se vrši komunikacija računara sa nadređenim Raspberry Pi-em. Pokretanjem programskog rešenja se generiše sekvenca SPI signal, a signal se snima sa osciloskopa na računar. Okidač je podešen na 3 V dok je horizontalna skala podešena na 200 ms. Vertikalna skala svakog od kanala je podešena na 1 V. Nakon ovog podešavanja se mogao videti signal SPI protokola (slika 3.5 – gde je ljubičastom bojom označen kanal na kojem se prenosi takt, a žutom kanal na kojem se prenosi podaci).
+
+3.4	Povezivanje LIN-a i merenje sa osciloskopom
+Carberry je automobilska pločica za proširenje računara Raspberry Pi. Ideja je da se ponudi spona ka elektronici i komunikacionim kanalima u automobilima i samim tim omogući interakcija, ali i razvoj aplikacija za krajnjeg korisnika kao što su zabavno-informacioni sistemi (medija centar, dijagnostika automobila, logovanje podataka, upravljanje flotom vozila, praćenje vozila), alarmni sistemi, pružanje Interneta i slično. Takođe Carberry može da posluži i u obrazovne svrhe da bi se proučavali automobilske magistrale i protokoli.
+Carberry pločica je povezana preko 40-pinskog GPIO interfejsa na Raspberry Pi 2 model B računar. Carberry komunicira sa Raspberry Pi upotrebom pinova 8 (za slanje podataka), 10 (za prijem podataka), 12 (za daljinsko upravljanje), 13 (za gašenje Carberry-ja) na Raspberry Pi-u.
+
+ 
+Slika 3.6 Dijagram povezivanja LIN-a.
+Sledeći korak je bio povezivanje linije sa glavne utičnice Carberry modula na prototipsku ploču. Tabela 2 opisuje sve linije glavne utičnice, gde su crvenom bojom označene linije za napajanje i uzemljenje Carberry-ja, a zelenom bojom žica za LIN (ostali kablovi nisu relevantni tako da njihova uloga nije opisana). Nakon što su povezana dva ovakva modula (slika 3.6) na prototipsku ploču, komunikacija računara sa svakim od Carberry modula je ostvarena preko serijskog porta brzinom od 9600 bita u sekundi korišćenjem microUSBToUSB kabla i upotrebom Putty programa. Komunikacija je urađena korišćenjem komandi koje su standardizovane od strane proizvođača Carberry-ja.
+Pozicija 	Boja linije 	Opis	Pozicija 	Boja linije 	Opis
+1 	Crvena	+12 V Napon	12 	Crveno/Zelena 	LIN 
+2 	Crna	Uzemljenje	13 	Plava	
+3 	Plavo/Žuta 	+12 V Ulaz za paljenje	14 	Plavo/Zelena 	
+4 	Crno/Naran. 		15 	Ružičasta 	
+5 	Bela		16 	Žuta	
+6 	Crna 		17 	Ružičasto/Bela 	
+7 	Belo/Zelena 		18 	Žuto/Crna 	
+8 	Zelena 		19 	Siva	
+9 	Bela 		20 	Žuto/Siva 	
+10 	Žuto/Zelena 		21 	Svetlo plava 	
+11 	Žuto/Bela 		22 	Svetlo-plava/Bela 	
+Tabela 2 Opis žica glavne utičnice za Carberry modul.
+ 
+Slika 3.7 Prikaz ekrana osciloskopa prilikom snimanja LIN signala
+Ove komande će detaljnije biti objašnjene u programskom rešenju. Oba uređaja se moraju podesiti na istoj brzini komunikacije. Nakon toga se mogu slati komande za generisanje signala. Na osciloskopu je horizontala skala podešena na 4 ms, okidač na 3 V a vertikalna skala signala na 5 V. Nakon ovog podešavanja se mogao videti signal LIN protokola (slika 3.7 – na slici su rastuće ivice predstavljene 1 u binarnom obliku – napon oko 3 V, a napon oko 0 V predstavlja 0 u binarnom obliku – konkretno na ovoj slici je označeno kako bi trebalo da izgleda dekodovan ispis signala).
+
+3.5	Povezivanje CAN-a i merenje sa osciloskopom
+Za generisanje signala za CAN magistralu korišćena je elektronska upravljačka jedinica i alat CANoe. CANoe alat je napredni alat za razvoj, testiranje i analizu kako pojedinačnih elektronskih upravljačkih jedinica, tako i kompletne mreže.
+Osnovne prednosti ovog alata su:
+•	Jedan zajednički alat i za testiranje i za razvoj.
+•	Lako automatsko testiranje.
+•	Mogućnost simuliranja i testiranja elektronskih upravljačkih jedinica preko dijagnostike.
+•	Otkrivanje i ispravljanje grešaka u ranim fazama razvoja softvera.
+•	Intuitivno grafičko okruženje i evaluacija rezultata bazirana na tekstu.
+U CANdb++ Editor-u je kreirana baza podataka (format .dbc) koja opisuje celokupnu CAN mrežu. Svaka CAN mreža je definisana sa:
+•	Mrežom.
+•	Upravljačkom jedinicom.
+•	Promenljivama okruženja.
+•	Mrežnim čvorovima.
+•	Porukama.
+•	Signalima.
+ 
+Slika 3.8 Dijagram povezivanja CAN.
+ 
+Slika 3.9 Prikaz ekrana osciloskopa prilikom snimanja CAN signala.
+Samo kreiranje ove baze podataka će biti detaljnije objašnjeno u programskom rešenju (4.6). Nakon podešavanja konfiguracije u CANoe-u i uključivanja napravljene baze podataka, urađeno je povezivanje elektronske upravljačke jedinice i računara USB kablom, a zatim je pokrenuta simulacija dok su sa druge strane povezane dve probe osciloskopa na CAN-H i CAN-L kanal čije su linije izvedene i priključene na prototipsku ploču (slika 3.8). Okidač je podešen na 3 V, horizontalna skala na 100 ms, dok je vertikalna skala oba kanala podešena na 2 V. Nakon ovog podešavanja se mogao videti signal CAN protokola (slika 3.9 – žutom bojom je predstavljen signal na CAN-H linije dok je plavom predstavljen signal na CAN-L liniji).
+
+ 
+4.	Programsko rešenje
+Programsko rešenje se odnosi na prikupljanje, obradu i dekodovanje signala sa osciloskopa. Pri izradi ovog programskog rešenja korišćen je programski jezik Pajton. Kod je pisan praćenjem PEP8 [7] konvencije.
+Realizacija programskog rešenja je grupisana u 14 programskih modula (tabela 3). Dokumentacija programskog rešenja je urađena upotrebom Doxygen alata. Komunikacija sa Raspberry Pi-em upotrebom SSH protokola je urađena korišćenjem paramiko Pajton modula.
+Naziv programskog modula	Funkcionalnost programskog modula
+main.py	Prikupljanje podataka i obrada signala sa osciloskopa.
+kmp.py	KnuthMorrisPratt algoritam za pretragu.
+csv_everything.py	Snimanje signala za kasniju upotrebu.
+serial_can.py	Serijska komunikacija sa Carberry, slanje CAN okvira. 
+serial_lin.py	Serijska komunikacija sa Carberry, slanje LIN okvira.
+ssh_i2c.py	SSH komunikacija sa Raspberry Pi, pokreće send_i2c.py.
+ssh_spi.py	SSH komunikacija sa Raspberry Pi, pokreće send_spi.py.
+send_i2c.py	Slanje I2C okvira.
+send_spi.py	Slanje SPI okvira.
+can_decoding.py	Dekodovanje CAN okvira.
+lin_decoding.py	Dekodovanje LIN okvira.
+spi_decoding.py	Dekodovanje SPI okvira.
+i2c_decoding.py	Dekodovanje I2C okvira.
+checksum.py	Izračunavanje kontrolne sume za LIN.
+Tabela 3 Opis programskih modula.
+4.1	Komunikacija sa osciloskopom, merenje i obrada signala
+Komunikacija sa osciloskopom je urađena upotrebom PyVisa modula u main.py. PyVisa omogućava inicijalizaciju osciloskopa kao objekata klase ResourceManager. Funkciji open_resource ovog objekta kao parametar se šalje identifikacioni broj osciloskopa koji se može videti u aplikaciji OpenChoiceDesktop. Razmenjivanje podataka sa osciloskopom se svodi na dve metode klase – write() i ask(). Praćenjem priručnika za programere od Tektronix-a [8] za ovaj model osciloskopa poslate su komande kao parametar jednoj od dve prethodno opisane metode, u zavisnosti od namene (da li se želi podešavanje osciloskopa ili prikupljanje podataka). Poslate su komande za odabir kanala (DATA:SOU CH), postavljanje horizontalne (HORizontal:SCAle) i vertikalne skale (VERtical:SCAle), a potom za prikupljanje podataka (DATA:WIDTH 1, DATA:ENC RPB, WFMPRE:YMULT?, WFMPRE:YZERO?, WFMPRE:YOFF?, WFMPRE:XINCR?, CURVE?) nakon svake detekcije okidača (TRIGger:A SETLevel, ACQ:STATE ON, ACQ:STATE?). Ovi snimljeni podaci (vreme i napon za svaki od izabranih kanala) se prosleđuju objektu klase Signal kao argumenti. Za svaki kanal koji je potreban za određeni protokol, se posebno inicijalizuje objekat klase Signal.
+Unutar klase Signal se nalaze metode:
+•	plotting_1_ch – Ova metoda služi za grafički prikaz signala koji ima 1 kanal (nema odvojen kanal za podatke i takt, već samo kanal za podatke).
+•	plotting_2_ch – Ova metoda služi za grafički prikaz signala koji ima 2 kanala (odvojen kanal za podatke i takt).
+•	level_out_signal – Ova metoda služi za postavljanje svakog od odbirka signala na 1 ili 0 u zavisnosti od toga da li prelazi određenu vrednost napona koja predstavlja okidač. Ova obrada signala se vrši radi lakšeg dekodovanja signala.
+Unutar main.py se nalaze funkcije: 
+•	main – Ova funkcija se koristi za slanje komandi osciloskopu za podešavanje horizontalne i vertikalne skale, kao i za prikupljanje napona i vremena za svaki od odabranih kanala.
+•	set_channel – Ova funkcija se koristi za postavljanje kanala osciloskopa na kojima se prate signali.
+•	can_processing – Ova funkcija se koristi za rekurzivnu proveru razmaka izmeću svakog od okvira CAN signala. Za ovu proveru korišćena je Knuth-Morris-Pratt algoritam koja se nalazi unutar kmp.py. Ovu proveru je bilo potrebno uraditi zbog mogućih interferencija koje se javljaju prilikom snimanja signala osciloskopom. Ova funkcija dalje poziva can_decoded funkciju za dekodovanje koja se nalazi unutar can_decoding.py.
+•	lin_processing – Ova funkcija poziva lin_decoded funkciju koja se nalazi unutar lin_decoding.py i proverava ispravnost izmerene kontrolne sume i izmerenog pariteta.
+•	i2c_online_processing – Ova funkcija snima signal direktno sa osciloskopa, potom ga obrađuje i poziva i2c_decoded funkciju za dekodovanje koja se nalazi unutar i2c_decoding.py.
+•	i2c_offline_processing – Ova funkcija snima signal iz i2c-capture.csv  datoteke, potom ga obrađuje i poziva i2c_decoded funkciju za dekodovanje koja se nalazi unutar i2c_decoding.py.
+•	spi_online_processing – Ova funkcija snima signal direktno sa osciloskopa, potom ga obrađuje i poziva spi_decoded funkciju za dekodovanje koja se nalazi unutar spi_decoding.py.
+•	spi_offline_processing – Ova funkcija snima signal iz spi-capture.csv datoteke, potom ga obrađuje i poziva spi_decoded funkciju za dekodovanje koja se nalazi unutar spi_decoding.py.
+4.2	Knuth-Morris-Pratt algoritam
+Knuth-Morris-Pratt [9] algoritam za pretragu nizova traži pojavu obrasca unutar teksta, ali kada dođe do neslaganja obrazac se pomera za neki optimalan broj karaktera, tako zaobilazeći preispitivanje ranije usklađenih karaktera. Sledeći primer će pojasniti funkcionisanje ovog algoritma:
+T=	Ti	Ti+1	Ti+2	Ti+3	Ti+4	Ti+5	Ti+6	Ti+7
+O=			O0	O1	O2	O3	O4	O5
+√	√	√	√	X 
+U primeru smo utvrdili da je karakter O0 obrasca poravnat sa karakterom Ti+2 teksta, karakter obrasca O1 sa karakterom Ti+3 teksta, itd. Na poziciji Ti+6 teksta smo uočili neslaganje. Kako se O0 slaže sa Ti+2, O1 sa Ti+3, itd., besmisleno je pomerati obrazac za jednu poziciju u odnosu na tekst jer ni tada ne može da dođe do slaganja. Ako u obrascu nema ponavljanja odmah treba preći na sledeću poziciju:
+T=	Ti	Ti+1	Ti+2	Ti+3	Ti+4	Ti+5	Ti+6	Ti+7
+O=			O0	O1	O2	O3	O4	O5
+√	√	√	√	X
+O0	O1
+Ovaj postupak se ponavlja sve dok se ne dođe do krajnje pozicije teksta nad kojim se vrši pretraga. Posebna prednost ovakve procedure je što ona radi sa tekstom idući s leva u desno i uniformno vrši pomeranje obrasca, a može i paralelno da proverava više obrazaca. U najgorem slučaju broj poređenja je linearan.
+
+4.3	Dekodovanje I2C-a
+Dekodovanje I2C signala je urađeno u i2c_decoding.py u funkciji i2c_decoded. Na početku se vrši pretraga početne sekvence za svaki od kanala (SDA, SCL) – početna sekvenca kanala za prenos radnog takta je za jedan bit veća. Za pretragu ove dve sekvence je korišćen Knuth-Morris-Pratt algoritam. Slika 4.1 prikazuje primer snimljenog I2C signala sa osciloskopa upotrebom programskog rešenja – svako uzorkovanje koje je oko 0 V predstavlja 0 u binarnom obliku, a napon koji je oko 3 V (naponom iznad prethodnog postavljenog okidača) predstavlja 1 u binarnom obliku. Nakon što su signali snimljeni uzorkuju se na vrednosti vremenskog intervala koje smo poslali osciloskopu. Potom se uzorkovanje podataka sa SDA linije vrši na rastućoj ivici takta sa SCL linije. Podaci se čitaju u MSB-u. Prvi bit predstavlja početak okvira – početna sekvenca, narednih 7 bita predstavlja adresu uređaja sa kog se šalju podaci i nakon bita potvrde podređenog uređaja, potom dolazi 8-bitni sadržaj koji predstavlja podatke koje se prenose na magistrali i 1 bit potvrde od rukovodioca (moguće je slati više ovakvih paketa za podatke unutar jednog okvira poruke). Nakon što su izdvojeni korisni podaci, isti se predstavljaju u heksadecimalnom formatu.
+
+ 
+Slika 4.1 Primer neobrađenog I2C signala.
+
+4.4	Dekodovanje SPI-a
+Dekodovanje je urađeno u spi_decoding.py u funkciji spi_decoded. Slika 4.2 prikazuje primer snimljenog SPI signala sa osciloskopa upotrebom programskog rešenja. Nakon što su signali snimljeni uzorkuju se na vrednosti vremenskog intervala koje smo poslali osciloskopu. Podaci se čitaju u MSB-u kao da su binarni brojevi – svako uzorkovanje koje je oko 0 V predstavlja 0 u binarnom obliku, a napon koji je oko 3 V (naponom iznad prethodnog postavljenog okidača) predstavlja 1 u binarnom obliku. Uzorkovanje podataka sa SPI_MOSI ili SPI_MISO linije se potom vrši na rastućoj ivici takta sa SPI_CLK linije u slučaju da je CPHA 0, dok se uzorkuju na opadajućoj ivici u slučaju da je CPHA 1. Svaka rastuća (ulazna) ivica signala takta predstavlja da je prenos podataka aktivan, duži periodi mirnog signala (0 V) predstavlja stanje da se trenutno ne šalju podaci. Da bi se prepoznali podaci koji treba da se dekoduju, prvo su se morali izdvojiti korisni podaci na SPI_MOSI liniji koji se šalju u isto vreme kada se pojavi sekvenca od 8 rastućih ivica na SPI_CLK liniji. Za pretragu sekvence na SPI_CLK liniji se koristi Knuth-Morris-Pratt algoritam. Ukoliko sekvenca nije pravilno pronađena (ako nije pravilno podešena horizontalna ili vertikalna skala) dobiće se neispravni podaci. Ukoliko je sekvenca pronađena potrebno je posmatrati podatke koji imaju dužinu ove sekvence. Korisne podatke možemo da izdvojimo tek nakon što je utvrđeno da je dužina sekvence pravilna. Pošto unutar svakog intervala slanja ima 8 rastućih ivica takta to znači da je dužina podataka unutar jednog intervala slanja maksimalno osmobitna. Nakon što su izdvojeni korisni podaci, isti se predstavljaju u heksadecimalnom formatu.
+ 
+Slika 4.2 Primer neobrađenog SPI signala.
+
+4.5	Dekodovanje LIN-a 
+Kao što je navedeno u konceptu rešenja, u ovom poglavlju biće dato objašnjenje standardnih komandi za Carberry za LIN protokol. Prvo, preko serijskog porta, potrebno je uspostaviti vezu za svaki od Carberry modula korišćenjem LIN OPEN komande. Postoji pet različitih režima rada koje su podržane od strane Carberry-ja (tabela 4).
+Mod
+Komanda	Opis komande
+Master 1x	LIN OPEN MASTER1X <brzina prenosa>	Otvara kanal pri čemu automatski prepoznaje brzinu na magistrali, uređaj se ponaša kao nadređeni, koristi se standardna kontrolna suma.
+Master 2x	LIN OPEN MASTER2X <brzina prenosa>	Otvara kanal pri čemu automatski prepoznaje brzinu, uređaj se ponaša kao nadređeni, koristi se produžena kontrolna suma.
+Slave 1x	LIN OPEN SLAVE1X	Otvara kanal pri čemu automatski prepoznaje brzinu, uređaj se ponaša kao podređeni, koristi se standardna kontrolna suma.
+Slave 2x	LIN OPEN SLAVE2X	Otvara kanal pri čemu automatski prepoznaje brzinu, uređaj se ponaša kao podređeni, koristi se produžena kontrolna suma.
+Free	LIN OPEN FREE <brzina prenosa>	Otvara kanal i zadaje brzinu; za paritet i kontrolnu sumu je odgovoran korisnik.
+Tabela 4 Carberry komande za LIN.
+U izradi rada korišćen je poslednji, „slobodni“ režim za slanje paketa, zbog fleksibilnosti. Nakon slanja svake komande, ukoliko je ispravna, dobija se odgovor OK. Slanje LIN okvira u slobodnom režimu se radi upotrebljavanjem LIN TX <zaštićeni identifikator> [heksadecimalni prikaz podataka] [kontrolna suma] komande.
+ 
+Slika 4.3 Prikaz neobrađenog LIN signala.
+Slika 4.3 prikazuje primer snimljenog LIN signala sa osciloskopa upotrebom programskog rešenja. Nakon što je signal snimljen uzorkuje se na vrednost vremenskog intervala koje smo poslali osciloskopu – svako uzorkovanje koje je oko 0 V predstavlja 0 u binarnom obliku, a napon koji je oko 3 V (naponom iznad prethodnog postavljenog okidača) predstavlja 1 u binarnom obliku. Početak samog paketa se predstavlja u obliku prvih 13 bita sa vrednošću 0, biti od 15. do 22. pozicije predstavljaju sinhronizaciono polje (2 bita između ovog polja i prethodnog predstavljaju 2 bita sa vrednošću 0 koji označavaju razmak između polja i ovaj razmak će se pojavljivati nakon svakog polja, tako da nadalje neće biti spominjan, već će se podrazumevati njegovo prisustvo), potom dolazi identifikaciono polje – 25. do 33. bit, nakon ovog polja stižu polje sa podacima (veličine 2, 4 ili 8 bita) i 8-bitno polje sa kontrolnom sumom. Sva ova izdvojena polja se potom predstavljaju u heksadecimalnom obliku.
+Dekodovanje je urađeno u lin_decoding.py u funkciji lin_decoded. Da bi se proverilo da li je kontrolna suma ispravna, izračunata je praćenjem uputstva iz LIN specifikacije. Potom se poredi da li izračunata kontrolna suma odgovara izmerenoj kontrolnoj sumi u okviru. Takođe se mora proveriti validnost pariteta za svaki od poslatih okvira. U zavisnosti od toga da li su podaci poslati u okviru odgovarali izračunatim podacima, na standardnom izlazu ekrana se šalje obaveštenje da li ima greške u poslatom okviru.
+
+4.6	Dekodovanje CAN-a
+U CANoe je prvo kreirana odgovarajuća konfiguracija i sačuvana u konfiguracionoj datoteci sa nastavkom .cfg. Potom je u CANoe Options meniju pod Measurment opcijom, i u General prozoru Channel Usage, podešen odgovarajući broj CAN kanala (2). U Simulation Setup (u ovom prozoru je ukupan sistem prikazan grafički sa mrežama, uređajima, i svim mrežnim čvorovima) prozoru (slika 4.4) su potom kreirana dva ECU čvora i jedan I-Generator (koristi se za generaciju CAN signala) koji su povezani na prethodno napravljenu CAN mrežu. U meniju Hardware pod opcijom Network Hardware je nameštena odgovarajuća brzina prenosa koja mora da odgovara brzini prenosa koja se koristi za dekodovanje. Ako ovo nije pravilno podešeno, dekodovanje neće biti ispravno. Potom je kreirana baza podataka za CAN mrežu u CANoe Candb++ Editor-u (slika 4.5), unutar koje su kreirana 2 čvora (primarni i sekundarni).
+ 
+Slika 4.4 Prikaz Simulation Setup-a prozora unutar CANoe-a.
+Nakon toga su kreirana dva signala, pri čemu je jedan rezervisan za slanje podataka od primarnog čvora do sekundarnog, a drugi za slanje obrnutim smerom. Zatim su ovi signali mapirani za odgovarajuću poruku koja je prethodno kreirana. Na kraju su ove poruke mapirane na svaki od odgovarajućih čvorova, čime se završava kreiranje baze podataka.
+ 
+Slika 4.5 Prikaz Canoe CANdb++ Editor-a.
+Unutar I-Generator-a (slika 4.6) su kreirani signali koji će se slati od primarnog do sekundarnog čvora. Za pravljenje signala mora se odabrati kanal, identifikator, tip signala (da li je sa standardnim identifikatorom ili produženim), dužina podataka, a unutar Raw Data prozora se konfiguriše svaki od okteta za slanje.
+ 
+Slika 4.6 Prikaz I-Generator prozora.
+Pre samog pokretanja konfiguracije, mora se potvrditi da unutar Home prozora da je konfiguracija podešena u Online Mode (kada se podaci sa trenutnog merenja koriste – hardverski ili simulacijom, za razliku kada se koriste podaci iz jednog od fajlova za evidentiranje) i da se koristi Real Bus (za razliku od simulirane magistrale), pošto će se signal generisati upotrebom elektronske upravljačke jedinice. Praćenje signala u vremenu se vrši unutar Data prozora iz Analysis menija.
+Dekodovanje CAN signala urađeno je u can_decoding.py u funkciji can_decoded poštujući CAN 2.0 protokol. Stanja prikupljenog signala se predstavljaju u obliku 1 i 0, pri čemu su svi delovi signala sa naponom iznad prethodnog postavljenog okidača (3V) postavljeni na 1, dok su ostali postavljeni na 0. Nakon toga su izbačeni iz signala svi ubačeni i lavinski biti. Upotrebom Knuth-Morris-Pratt algoritma se prepoznavaju lavinski biti i 5 istih dominantnih ili recesivnih bita. Tek nakon ovoga se moglo nastaviti sa dekodovanjem pri čemu se gleda bit 13 signala koji ukazuje na to da li je korišćen CAN 2.0 A ili CAN 2.0 B.
+ 
+Slika 4.7 Prikaz uhvaćenog neobrađenog CAN signala sa osciloskopa
+Slika 4.7 prikazuje primer snimljenog CAN signala sa osciloskopa upotrebom programskog rešenja. Nakon što je signal snimljen uzorkuje se na vrednost vremenskog intervala koje smo poslali osciloskopu. Potom se izdvajaju svi relevantni okviri, vrši se konverzija dobijenih binarnih brojeva u heksadecimalnu vrednost i izračunava se ciklična provera redudanse. Ako se ova izračunata provera poklapa sa cikličnom proverom redudanse izdvojenom iz signala, glavnom programu se proslećuje dekodovan CAN signal sa naznakom da je provera tačna, u suprotnom, prosleđuje se dekodovan CAN signal sa naznakom da provera nije tačna.
+
+ 
+5.	Testiranje i rezultati
+
+Cilj testiranja je provera tačnosti implementacije programskog rešenja. Testiranje programskog rešenja je započeto povezivanjem svakog od protokola kao u konceptu rešenja (slika 3.2, slika 3.4, slika 3.6, slika 3.8), a potom generisanjem okvira za svaki od protokola na sledeći način:
+•	Generisanje I2C okvira urađeno u sendI2C.py (upotrebom Pajton modula smbus – smbus.SMBus(1).write_byte(adresa, podaci)).
+•	Generisanje SPI okvira je urađeno u sendSPI.py (upotrebom Pajton modula spidev – spidev.SpiDev().open(magistrala, adresa) potom spi.xfer(podaci)).
+•	Generisanje LIN okvira je urađeno u serial_lin.py (upotrebom serial Pajton modula – serial.Serial(ulaz, brzina prenosa).write(podaci)).
+•	Generisanje CAN okvira je urađeno u CANoe-u na način opisan u prethodnom poglavlju (4.6).
+Nakon što su generisani okviri, pokretanjem aplikacije za dekodovanje, potrebno je kao argument uneti tip protokola koji želi da se dekoduje (u slučaju LIN-a, potrebno je uneti i koju vrstu kontrolne sume želimo da dekodujemo c – za klasičnu kontrolnu sumu, e – za poboljšanu kontrolnu sumu), kao i režim u kojem se izvršava (online – kada se želi očitavanje direktno sa osciloskopa ili offline – kada se želi očitavanje iz jedne od datoteka sa nastavkom .csv – ime je kreirano u zavisnosti od toga koji se protokol koristi, čiji se sadržaj stvara pri svakom pokretanju aplikacije u online režimu upotrebom jedne od 4 funkcija unutar csv_everything.py). Potom se uporednom metodologijom (poređenjem izlaza programskog rešenja i generisanog signala) utvrdila ispravnost implementiranog dekodera. U slučaju CAN i LIN protokola, poređenjem dekodovane kontrolne sume snimljene sa osciloskopa i izračunate kontrolne sume se dodatno garantuje ispravnost implementiranog programskog rešenja. Kod I2C-a i SPI-a ispravnost programskog rešenja se garantuje sinhronizacijom bita podataka sa bitima takta – ukoliko očitavanje bita podataka nije na uzorkovanju bita takta kada je aktivno stanje prenosa podataka, podaci neće biti dobro očitani sa osciloskopa a samim tim neće se moći ni ispravno dekodovati. Testiranje je obavljeno sa velikom količinom različitih signala (različiti okviri kako u varijaciji sadržaja okvira identifikatora i okvira podataka tako i u veličini okvira podataka) upotrebom elektronske upravljačke jedinice, pri čemu se posebno povelo računa da se šalju okviri za testiranje mehanizma za detekciju „lavinskih“ bitova u slučaju dekodovanja CAN signala. I u ovom slučaju je testiranje uspešno izvršeno.
+Slika 5.1 predstavlja primer uspešnog dekodovanja I2C signala, slika 5.2 predstavlja primer uspešnog dekodovanja SPI signala, slika 5.3 predstavlja primer izlaza uspešnog dekodovanja LIN signala, a slika 5.4 predstavlja primer izlaza uspešnog dekodovanja CAN signala, na slikama su zelenom bojom označeni ispisi uspešno dekodovanih okvira signala koji su nam bitni za prepoznavanje ispravnosti implementiranog rešenja (samo podaci u slučaju I2C-a i SPI-a, a za preostala 2 protokola – identifikator, dužina, podaci i kontrolna suma), u slučaju da verzija kontrolne sume uneta kao jedan od argumenata programskog rešenja ne odgovara kontrolnoj sumi koja se koristila pri generisanju LIN signala, taj ispis bi bio crvene boje označavajući neuspešno dekodovanje.
+ 
+Slika 5.1 Primer izlaza uspešnog dekodovanja I2C-a.
+ 
+Slika 5.2 Primer izlaza uspešnog dekodovanja SPI-a.
+ 
+Slika 5.3 Primer izlaza uspešnog dekodovanja LIN-a.
+ 
+Slika 5.4 Primer izlaza uspešnog dekodovanja CAN-a.
+Poteškoće prilikom izrade su nastale pri snimanju podataka, jer pri kontinualnom prikupljanju podataka dolazi do kašnjenja između dva okvira. Ovo je prouzrokovano korišćenjem programskog jezika Pajtona koji, iako olakšava implementaciju programskog rešenja, uvodi probleme kašnjenja i netačnosti prilikom merenja. Kašnjenje između okvira je oko jedne sekunde (slika 5.5 – vertikalne crte predstavljaju po jedan CAN okvir, a ostale crte na grafiku predstavljaju kašnjenje). Ovaj problem je rešen očekivanjem ovog kašnjenja i „pomeranjem“ signala na vremenskog osi za vrednost kašnjenja.
+ 
+Slika 5.5 Kašnjenje između CAN okvira.
+Takođe, problem je nastao pri očitavanju signala protokola koji je više kanalni – I2C i SPI. CAN iako ima 2 kanala, ta dva kanala su faktički negativi jedan drugog (inverzija signala jednog od kanala daje signal drugog kanala), tako da ovaj problem se nije pojavio kod ovog protokola kao ni kod LIN-a. U jednom trenutku izrade ovog diplomskog rada proban je paralelizam slanja komandi upotrebom Pajton modula multiprocessing. Ovo se pokazalo neuspešnim zbog nemogućnosti kontrolisanja redosleda slanja komandi. Komande poslate jednom kanalu mogle su za svoje odredište da imaju drugi kanal, pošto tip osciloskopa korišćen u ovom radu ne podržava individualno slanje komandi za svaki od kanala u realnom vremenu. Zbog nemogućnosti paralelnog slanja komandi osciloskopu upotrebom API-ja (komande su objašnjene u programskom rešenju – 4.1) za svaki od kanala, rešavanje problema je urađeno naizmeničnim smenjivanjem kanala sa kojima se komunicira i na koji se šalju komande za postavljanje horizontalne i vertikalne skale, nivo okidača, prikupljanje snimljenih podataka. Sa ovim se javio problem kašnjenja između 2 signala. Pogotovo što se ovaj problem javio na protokolima kod kojih je važna međusobna sinhronizacija signala takta i podataka (da bi se pravilo očitali poslati podaci), bilo je veoma važno da se on reši. To je urađeno merenjem kašnjenja i potom „pomeranjem“ signala kanala na koji se trenutno šalju komande (nakon komunikacije sa prvim kanalom, obavlja se komunikacija sa drugim kanalom) na vremenskoj osi za izmerenu vrednost kašnjenja.
+
+ 
+6.	Zaključak
+
+U ovom radu je realizovano jedno rešenje dekodovanja CAN, LIN, SPI i I2C okvira. U tu svrhu bilo je neophodno prvo izučiti način funkcionisanja svakog od pomenutih protokola, pa potom ih izmeriti osciloskopom. Da bi se osciloskop pravilno upotrebljavao moralo se pristupiti izučavanju ručnog podešavanja parametara za specifikaciju svakog od protokola da bi se signali uspešno snimili. Nakon toga je započeto povezivanje osciloskopa, generisanje, merenje i razumevanje izmerenog signala. Potom se pristupilo kreiranju programskog rešenja korišćenjem Pajton programskog jezika, praćenjem dokumentacije od strane proizvođača osciloskopa korišćenog u ovom radu.
+Rezultati pokazuju da je uspešno realizovano programsko rešenje za sva 4 protokola.
+Funkcionalnost implementiranog dekodera olakšava analiziranje signala koji se često koriste u automobilskoj industriji, time što korisnik ovog programa ne mora da konstantno vodi računa o podešavanju samog osciloskopa, već je podešavanje i analiza signala automatski urađeno.
+Dalji razvoj će se fokusirati na realizaciju automatske detekcije korišćenog protokola i realizaciju automatske detekcije korišćene vrste kontrolne sume za LIN protokol.
+
+ 
+7.	Literatura
+
+[1]	"Understanding the I2C Bus", 2015. [Online]. Dostupno: http://www.ti.com/lit/an/slva704/slva704.pdf [pristupljeno: avgust 2019.]
+[2]	"Serial Peripheral Interface (SPI) - Texas Instruments", 2010. [Online]. Dostupno: http://www.ti.com/lit/ug/sprugp2a/sprugp2a.pdf [pristupljeno: avgust 2019.]
+[3]	"LIN Specification Package Revision 2.0", 2003. [Online]. Dostupno: https://forums.ni.com/attachments/ni/30/3619/1/LIN.pdf [pristupljeno: jun 2019.]
+[4]	"BOSCH CAN Specification Version 2.0", 1991. [Online]. Dostupno: http://esd.cs.ucr.edu/webres/can20.pdf [pristupljeno: jun 2019.]
+[5]	ISO 11898-1, "Road vehicles — Controller area network (CAN) — Part 1:
+Data link layer and physical signalling", First edition, Geneva, Switzerland, ISO, 2003.
+[6]	MSO4000B and DPO4000B Series Digital Phosphor Oscilloscopes User Manual. [Online] Dostupno: https://download.tek.com/manual/071281002web.pdf [pristupljeno: jun 2019.]
+[7]	"PEP 8 -- Style Guide for Python Code", 2001. [Online]. Dostupno: https://www.python.org/dev/peps/pep-0008 [pristupljeno: avgust 2019.]
+[8]	MSO4000 and DPO4000 Series Digital Phosphor Oscilloscopes Programmer Manual. [Online] Dostupno: https://download.tek.com/manual/077024801web.pdf [pristupljeno: jun 2019.]
+[9]	Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein, "Introduction to Algorithms", Third Edition, The MIT Press, London, England, 2010.
